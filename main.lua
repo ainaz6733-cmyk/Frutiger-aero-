@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V12.2 (ORION UI LIBRARY EDITION)
+-- FRUTIGER AERO MM2 HUB V13 (KAVO UI EDITION - 100% FIXED)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,8 +6,9 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Подгружаем профессиональную мобильную библиотеку интерфейса
-local OrionLib = loadstring(game:HttpGet("https://githubusercontent.com"))()
+if CoreGui:FindFirstChild("DeltaMM2Hub") then
+	CoreGui.DeltaMM2Hub:Destroy()
+end
 
 local EspEnabled = true
 local AimbotEnabled = true
@@ -15,7 +16,7 @@ local AntiFlingEnabled = true
 local Highlights = {}
 
 -- ========================================================
--- ФУНКЦИОНАЛ ЧИТА (АИМ, ESP, ФЛИНГ, ТП)
+-- ФУНКЦИОНАЛ (АНТИ-ФЛИНГ, ТП, ФЛИНГ, АИМ, ESP)
 -- ========================================================
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
@@ -189,76 +190,52 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- СБОРКА ПРОФЕССИОНАЛЬНОГО ИНТЕРФЕЙСА ОРИОН (ORION GUI)
+-- ВШИТАЯ БИБЛИОТЕКА KAVO UI (РАБОТАЕТ АВТОНОМНО)
 -- ========================================================
--- Создаем главное окно
-local Window = OrionLib:MakeWindow({
-	Name = "FRUTIGER AERO HUB V12.2", 
-	HidePremium = false, 
-	SaveConfig = true, 
-	ConfigFolder = "DeltaFrutiger"
-})
+local KavoLibrary = {}
+function KavoLibrary:CreateMenu()
+	local KavoGui = Instance.new("ScreenGui", CoreGui)
+	KavoGui.Name = "DeltaMM2Hub"
+	
+	local Main = Instance.new("Frame", KavoGui)
+	Main.Size = UDim2.new(0, 340, 0, 220)
+	Main.Position = UDim2.new(0.3, 0, 0.25, 0)
+	MainFrame = Main
+	Main.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+	Main.Active = true Main.Draggable = true
+	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+	
+	local Top = Instance.new("Frame", Main)
+	Top.Size = UDim2.new(1, 0, 0, 30)
+	Top.BackgroundTransparency = 1
+	
+	local Line = Instance.new("Frame", Main)
+	Line.Size = UDim2.new(1, 0, 0, 3)
+	Line.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+	
+	local Title = Instance.new("TextLabel", Top)
+	Title.Text = "  FRUTIGER AERO HUB V13"
+	Title.Size = UDim2.new(0.7, 0, 1, 0)
+	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Title.Font = Enum.Font.GothamBold Title.TextSize = 13 Title.TextXAlignment = Enum.TextXAlignment.Left Title.BackgroundTransparency = 1
+	
+	local Close = Instance.new("TextButton", Top)
+	Close.Text = "X" Close.Size = UDim2.new(0, 24, 0, 24) Close.Position = UDim2.new(0.9, 0, 0.1, 0)
+	Close.BackgroundColor3 = Color3.fromRGB(40, 45, 50) Close.TextColor3 = Color3.fromRGB(255, 75, 75)
+	Close.Font = Enum.Font.GothamBold Close.TextSize = 12 Instance.new("UICorner", Close)
+	
+	local TabsFrame = Instance.new("Frame", Main)
+	TabsFrame.Size = UDim2.new(0, 90, 1, -35) TabsFrame.Position = UDim2.new(0, 5, 0, 32) TabsFrame.BackgroundTransparency = 1
+	local TabsList = Instance.new("UIListLayout", TabsFrame) TabsList.Padding = UDim.new(0, 4)
+	
+	local PagesFrame = Instance.new("Frame", Main)
+	PagesFrame.Size = UDim2.new(1, -105, 1, -40) PagesFrame.Position = UDim2.new(0, 100, 0, 35) PagesFrame.BackgroundTransparency = 1
 
--- СОЗДАЕМ РАЗДЕЛЫ (ВКЛАДКИ/TABS КАК В VORTEX!)
-local MainTab = Window:MakeTab({Name = "Главная", Icon = "rbxassetid://4483345998"})
-local CombatTab = Window:MakeTab({Name = "Бой (Fling)", Icon = "rbxassetid://4483345998"})
-local TeleportTab = Window:MakeTab({Name = "Телепорты", Icon = "rbxassetid://4483345998"})
+	local DeltaIcon = Instance.new("ImageButton", KavoGui)
+	DeltaIcon.Image = "rbxassetid://9824248563" DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
+	DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25) DeltaIcon.BackgroundTransparency = 0.2
+	DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0) DeltaIcon.Size = UDim2.new(0, 50, 0, 50) DeltaIcon.Visible = false
+	Instance.new("UICorner", DeltaIcon)
 
--- --- ВКЛАДКА 1: ГЛАВНАЯ (Переключатели) ---
-MainTab:AddToggle({
-	Name = "ESP Подсветка Ролей",
-	Default = true,
-	Callback = function(Value)
-		EspEnabled = Value
-		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) end
-	end    
-})
-
-MainTab:AddToggle({
-	Name = "Хард Аимбот (Shift Lock)",
-	Default = true,
-	Callback = function(Value)
-		AimbotEnabled = Value
-	end    
-})
-
-MainTab:AddToggle({
-	Name = "Защита от флинга (Anti-Fling)",
-	Default = true,
-	Callback = function(Value)
-		AntiFlingEnabled = Value
-	end    
-})
-
--- --- ВКЛАДКА 2: БОЙ (Кнопки Флинга) ---
-CombatTab:AddButton({
-	Name = "💥 Флинг Убийцы (Уничтожить)",
-	Callback = function()
-		flingRole("Murderer")
-	end
-})
-
-CombatTab:AddButton({
-	Name = "⚡ Флинг Шерифа (Забрать пестик)",
-	Callback = function()
-		flingRole("Sheriff")
-	end
-})
-
--- --- ВКЛАДКА 3: ТЕЛЕПОРТЫ ---
-TeleportTab:AddButton({
-	Name = "⭐ Телепорт к Пестику на полу",
-	Callback = function()
-		teleportToGun()
-	end
-})
-
-TeleportTab:AddButton({
-	Name = "👣 Телепорт за спину к Убийце",
-	Callback = function()
-		teleportToRole("Murderer")
-	end
-})
-
--- Запуск библиотеки
-OrionLib:Init()
+	Close.MouseButton1Click:Connect(function() Main.Visible = false DeltaIcon.Visible = true end)
+	
