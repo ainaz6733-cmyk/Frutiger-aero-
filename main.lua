@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V26.1 (PURE GUI + TOTAL FIX)
+-- FRUTIGER AERO MM2 HUB V27 (CORE GUI EDITION - 100% FIXED)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Защита от дублирования окон
+-- Безопасное удаление старых копий меню
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -16,7 +16,7 @@ local AimbotEnabled = true
 local AntiFlingEnabled = true
 
 -- ========================================================
--- СТАБИЛЬНЫЙ ФУНКЦИОНАЛ (БЕЗ СКИН-ЧЕЙНДЖЕРА)
+-- ФУНКЦИОНАЛ ЧИТА (ВСЕ РАБОЧИЕ ИСПРАВЛЕННЫЕ СКРИПТЫ)
 -- ========================================================
 
 -- Поисковик пестика на полу
@@ -109,7 +109,7 @@ local function getRoleColor(player)
 	return Color3.fromRGB(0, 255, 100)
 end
 
--- Аимбот
+-- Аимбот под Shift Lock
 local function getBestTarget()
 	local localRole = getPlayerRole(LocalPlayer)
 	local closestPlayer = nil
@@ -178,21 +178,34 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- МОНОЛИТНЫЙ GUI В ДВЕ КОЛОНКИ (БЕЗ СКРОЛЛОВ И НАКЛАДОК)
+-- НЕУБИВАЕМЫЙ ИСПРАВЛЕННЫЙ GUI КНОПОК ПО СЕТКЕ CORE GUI
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Главное Окно (Лазурное стекло Frutiger)
+-- Синий глянцевый человечек для открытия (создан СРАЗУ, чтобы не было крашей)
+local DeltaIcon = Instance.new("ImageButton")
+DeltaIcon.Name = "AeroHumanIcon"
+DeltaIcon.Image = "rbxassetid://9824248563" 
+DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
+DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
+DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
+DeltaIcon.ZIndex = 10
+DeltaIcon.Visible = false
+DeltaIcon.Parent = ScreenGui
+Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
+
+-- Главная плашка-подложка под кнопки
 local MainPanel = Instance.new("Frame")
 MainPanel.Name = "MainPanel"
 MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
 MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.25, 0, 0.25, 0)
-MainPanel.Size = UDim2.new(0, 420, 0, 180)
+MainPanel.Size = UDim2.new(0, 420, 0, 180) -- Широкое горизонтальное окно в 2 колонки
 MainPanel.Active = true
 MainPanel.Draggable = true
 MainPanel.Parent = ScreenGui
@@ -210,12 +223,12 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V26.1"
+Title.Text = "FRUTIGER AERO HUB V27"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- КРЕСТИК Х (Жесткая позиция, ZIndex вытолкнут вперед)
+-- КРЕСТИК Х (Жесткая позиция)
 local CloseBtn = Instance.new("TextButton", MainPanel)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
@@ -227,19 +240,7 @@ CloseBtn.TextSize = 13
 CloseBtn.ZIndex = 10
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- Синий человечек для открытия
-local DeltaIcon = Instance.new("ImageButton", ScreenGui)
-DeltaIcon.Name = "AeroHumanIcon"
-DeltaIcon.Image = "rbxassetid://9824248563" 
-DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
-DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
-DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
-DeltaIcon.ZIndex = 10
-DeltaIcon.Visible = false
-Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
-
--- Конструктор кнопок
+-- Функция создания надежных кнопок
 local function createSubButton(text, pos, color)
 	local btn = Instance.new("TextButton", MainPanel)
 	btn.Size = UDim2.new(0, 180, 0, 32)
@@ -257,21 +258,14 @@ end
 -- --- ЛЕВАЯ КОЛОНКА (ТУМБЛЕРЫ) ---
 local EspToggle = createSubButton("ESP ПОДСВЕТКА: ВКЛ", UDim2.new(0.04, 0, 0.28, 0), Color3.fromRGB(0, 150, 255))
 local AimToggle = createSubButton("ХАРД АИМБОТ: ВКЛ", UDim2.new(0.04, 0, 0.55, 0), Color3.fromRGB(0, 150, 255))
+local AntiFlingToggle = createSubButton("🛡️ АНТИ-ФЛИНГ: ВКЛ", UDim2.new(0.04, 0, 0.82, 0), Color3.fromRGB(0, 150, 255))
+AntiFlingToggle.Size = UDim2.new(0, 180, 0, 28)
 
 -- --- ПРАВАЯ КОЛОНКА (ДЕЙСТВИЯ) ---
-local FlingMurderBtn = createSubButton("💥 ФЛИНГ МАНЬЯКА", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
+local FlingMurderBtn = createSubButton("💥 ФЛИНГ УБИЙЦЫ", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
 local FlingSheriffBtn = createSubButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.52, 0, 0.55, 0), Color3.fromRGB(255, 120, 50))
-local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2.new(0.28, 0, 0.79, 0), Color3.fromRGB(255, 200, 0))
+local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2.new(0.52, 0, 0.82, 0), Color3.fromRGB(255, 200, 0))
 TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
 TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
 
 -- ЛОГИКА НАЖАТИЙ КНОПОК
-EspToggle.MouseButton1Click:Connect(function()
-	local s = EspToggle
-	EspEnabled = not EspEnabled
-	s.Text = EspEnabled and "ESP ПОДСВЕТКА: ВКЛ" or "ESP ПОДСВЕТКА: ВЫКЛ"
-	s.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
-end)
-
-AimToggle.MouseButton1Click:Connect(function()
-		
