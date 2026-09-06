@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V25 (MANUAL POSITIONING & TOGGLE FIX)
+-- FRUTIGER AERO MM2 HUB V26.1 (PURE GUI + TOTAL FIX)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Безопасное удаление старых копий меню
+-- Защита от дублирования окон
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -16,7 +16,7 @@ local AimbotEnabled = true
 local AntiFlingEnabled = true
 
 -- ========================================================
--- ФУНКЦИОНАЛ ЧИТА (БЕЗОПАСНЫЙ РАБОЧИЙ КОД)
+-- СТАБИЛЬНЫЙ ФУНКЦИОНАЛ (БЕЗ СКИН-ЧЕЙНДЖЕРА)
 -- ========================================================
 
 -- Поисковик пестика на полу
@@ -31,56 +31,7 @@ local function findDroppedGun()
 	return nil
 end
 
--- Скин-чейнджер на АВП
-local AWP_MESH_ID = "rbxassetid://430310237"
-local AWP_TEXTURE_ID = "rbxassetid://430310255"
-
-local function applyAwpSkin(tool)
-	pcall(function()
-		if not tool or not tool:IsA("Tool") then return end
-		if tool.Name == "Gun" or tool:FindFirstChild("GunCmd") or tool:FindFirstChild("GunServer") then
-			local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("MeshPart") or tool:FindFirstChildOfClass("SpecialMesh")
-			if handle then
-				if handle:IsA("MeshPart") then 
-					handle.MeshId = AWP_MESH_ID 
-					handle.TextureID = AWP_TEXTURE_ID
-				elseif handle:IsA("SpecialMesh") then 
-					handle.MeshId = AWP_MESH_ID 
-					handle.TextureId = AWP_TEXTURE_ID
-				else
-					local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
-					mesh.MeshId = AWP_MESH_ID 
-					mesh.TextureId = AWP_TEXTURE_ID 
-					mesh.Scale = Vector3.new(0.07, 0.07, 0.07)
-				end
-			end
-		end
-	end)
-end
-
-local function monitorWeapons(char)
-	if not char then return end
-	char.ChildAdded:Connect(function(child) 
-		task.wait(0.3) 
-		applyAwpSkin(child) 
-	end)
-end
-
-if LocalPlayer.Character then monitorWeapons(LocalPlayer.Character) end
-LocalPlayer.CharacterAdded:Connect(monitorWeapons)
-
-task.spawn(function()
-	while task.wait(1) do
-		pcall(function()
-			local bp = LocalPlayer:FindFirstChild("Backpack")
-			if bp then 
-				for _, tool in ipairs(bp:GetChildren()) do applyAwpSkin(tool) end 
-			end
-		end)
-	end
-end)
-
--- Флинг с телепортом обратно в точку старта
+-- Флинг с телепортом обратно на место
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -121,7 +72,7 @@ local function flingRole(roleName)
 	end
 end
 
--- Анти-Флинг защита
+-- Анти-Флинг купол
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
 		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = true end end
@@ -133,7 +84,7 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Телепорт к пистолету
+-- Телепорт к пушке
 local function teleportToGun()
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -141,7 +92,7 @@ local function teleportToGun()
 	if myHrp and droppedGun then myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0) end
 end
 
--- Роли для ESP
+-- Логика ролей для ESP
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
 	local bp = player:FindFirstChild("Backpack")
@@ -158,7 +109,7 @@ local function getRoleColor(player)
 	return Color3.fromRGB(0, 255, 100)
 end
 
--- Поиск цели для Аимбота
+-- Аимбот
 local function getBestTarget()
 	local localRole = getPlayerRole(LocalPlayer)
 	local closestPlayer = nil
@@ -179,7 +130,6 @@ local function getBestTarget()
 	return closestPlayer
 end
 
--- Цикл работы Аимбота
 RunService.RenderStepped:Connect(function()
 	if AimbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local target = getBestTarget()
@@ -189,7 +139,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- Силуэты ESP
+-- ESP силуэты сквозь стены
 local function updatePlayerESP(player)
 	if player == LocalPlayer or not player.Character then return end
 	local char = player.Character
@@ -228,62 +178,100 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ЖЕСТКО НАСТРОЕННЫЙ ТЕКСТОВЫЙ GUI ИНТЕРФЕЙС
+-- МОНОЛИТНЫЙ GUI В ДВЕ КОЛОНКИ (БЕЗ СКРОЛЛОВ И НАКЛАДОК)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Главный контейнер для кнопок (Жесткая высота под 7 кнопок)
-local MenuHolder = Instance.new("Frame")
-MenuHolder.Name = "MenuHolder"
-MenuHolder.Size = UDim2.new(0, 180, 0, 250)
-MenuHolder.Position = UDim2.new(0.02, 0, 0.15, 0)
-MenuHolder.BackgroundTransparency = 1
-MenuHolder.Parent = ScreenGui
+-- Главное Окно (Лазурное стекло Frutiger)
+local MainPanel = Instance.new("Frame")
+MainPanel.Name = "MainPanel"
+MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
+MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
+MainPanel.BorderSizePixel = 2
+MainPanel.Position = UDim2.new(0.25, 0, 0.25, 0)
+MainPanel.Size = UDim2.new(0, 420, 0, 180)
+MainPanel.Active = true
+MainPanel.Draggable = true
+MainPanel.Parent = ScreenGui
 
--- Синий глянцевый человечек для раскрытия меню
-local OpenLabel = Instance.new("TextButton")
-OpenLabel.Size = UDim2.new(0, 45, 0, 45)
-OpenLabel.Position = UDim2.new(0.02, 0, 0.45, 0)
-OpenLabel.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-OpenLabel.Text = "[ Δ ]"
-OpenLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
-OpenLabel.Font = Enum.Font.GothamBold
-OpenLabel.TextSize = 14
-OpenLabel.Visible = false
-OpenLabel.Parent = ScreenGui
-Instance.new("UICorner", OpenLabel).CornerRadius = UDim.new(1, 0)
+local MainCorner = Instance.new("UICorner", MainPanel)
+MainCorner.CornerRadius = UDim.new(0, 12)
 
--- Функция создания кнопок с РУЧНЫМ указанием позиции (Исключает баги невидимости)
-local function createTextButton(text, color, pos, callback)
-	local label = Instance.new("TextButton")
-	label.Size = UDim2.new(0, 175, 0, 30)
-	label.Position = pos -- Жесткая координата
-	label.BackgroundColor3 = color
-	label.BackgroundTransparency = 0.2
-	label.Text = text
-	label.TextColor3 = Color3.fromRGB(255, 255, 255)
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 10
-	label.Parent = MenuHolder
-	
-	Instance.new("UICorner", label).CornerRadius = UDim.new(0, 6)
-	
-	label.MouseButton1Click:Connect(function()
-		callback(label)
-	end)
-	return label
+local TopLine = Instance.new("Frame", MainPanel)
+TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+TopLine.Size = UDim2.new(1, 0, 0, 4)
+
+-- Шапка
+local Title = Instance.new("TextLabel", MainPanel)
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0.04, 0, 0.05, 0)
+Title.Size = UDim2.new(0, 250, 0, 25)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "FRUTIGER AERO HUB V26.1"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- КРЕСТИК Х (Жесткая позиция, ZIndex вытолкнут вперед)
+local CloseBtn = Instance.new("TextButton", MainPanel)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 13
+CloseBtn.ZIndex = 10
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+-- Синий человечек для открытия
+local DeltaIcon = Instance.new("ImageButton", ScreenGui)
+DeltaIcon.Name = "AeroHumanIcon"
+DeltaIcon.Image = "rbxassetid://9824248563" 
+DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
+DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
+DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
+DeltaIcon.ZIndex = 10
+DeltaIcon.Visible = false
+Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
+
+-- Конструктор кнопок
+local function createSubButton(text, pos, color)
+	local btn = Instance.new("TextButton", MainPanel)
+	btn.Size = UDim2.new(0, 180, 0, 32)
+	btn.Position = pos
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11
+	btn.ZIndex = 5
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	return btn
 end
 
--- Сборка кнопок (Каждая кнопка стоит СТРОГО на своем месте по высоте Y)
-local CloseToggle = createTextButton("[ ❌ ЗАКРЫТЬ МЕНЮ ]", Color3.fromRGB(255, 50, 50), UDim2.new(0, 0, 0, 0), function()
-	MenuHolder.Visible = false
-	OpenLabel.Visible = true
+-- --- ЛЕВАЯ КОЛОНКА (ТУМБЛЕРЫ) ---
+local EspToggle = createSubButton("ESP ПОДСВЕТКА: ВКЛ", UDim2.new(0.04, 0, 0.28, 0), Color3.fromRGB(0, 150, 255))
+local AimToggle = createSubButton("ХАРД АИМБОТ: ВКЛ", UDim2.new(0.04, 0, 0.55, 0), Color3.fromRGB(0, 150, 255))
+
+-- --- ПРАВАЯ КОЛОНКА (ДЕЙСТВИЯ) ---
+local FlingMurderBtn = createSubButton("💥 ФЛИНГ МАНЬЯКА", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
+local FlingSheriffBtn = createSubButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.52, 0, 0.55, 0), Color3.fromRGB(255, 120, 50))
+local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2.new(0.28, 0, 0.79, 0), Color3.fromRGB(255, 200, 0))
+TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
+TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
+
+-- ЛОГИКА НАЖАТИЙ КНОПОК
+EspToggle.MouseButton1Click:Connect(function()
+	local s = EspToggle
+	EspEnabled = not EspEnabled
+	s.Text = EspEnabled and "ESP ПОДСВЕТКА: ВКЛ" or "ESP ПОДСВЕТКА: ВЫКЛ"
+	s.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
 end)
 
-local EspToggle = createTextButton("🔵 ESP ПОДСВЕТКА: ВКЛ", Color3.fromRGB(0, 150, 255), UDim2.new(0, 0, 0, 35), function(btn)
-	EspEnabled = not EspEnabled
-	btn.Text = EspEnabled and "🔵 ESP ПОДСВЕТКА: ВКЛ" or "⚪ ESP ПОДСВЕТКА: ВЫКЛ"
+AimToggle.MouseButton1Click:Connect(function()
 		
