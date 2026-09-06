@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V14 (LIGHTWEIGHT KAVO VERSION)
+-- FRUTIGER AERO MM2 HUB V14 (CUSTOM LIGHT GUI & SCROLL)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -15,24 +15,8 @@ local AimbotEnabled = true
 local AntiFlingEnabled = true
 local Highlights = {}
 
--- Подгружаем Kavo UI из быстрого внешнего источника (всего одна строка!)
-local KavoLibrary = loadstring(game:HttpGet("https://githubusercontent.com"))()
-
--- Создаем меню (Frutiger Aero стиль — Aqua тема)
-local Window = KavoLibrary.CreateLib("FRUTIGER AERO HUB V14", "Aqua")
-
--- СОЗДАЕМ РАЗДЕЛЫ (ВКЛАДКИ СЛЕВА)
-local Tab1 = Window:NewTab("Главная")
-local Tab2 = Window:NewTab("Бой (Fling)")
-local Tab3 = Window:NewTab("Телепорты")
-
--- Создаем секции внутри вкладок
-local Section1 = Tab1:NewSection("Основные функции")
-local Section2 = Tab2:NewSection("Физика уничтожения")
-local Section3 = Tab3:NewSection("Перемещение")
-
 -- ========================================================
--- ЛОГИКА ФУНКЦИЙ (АНТИ-ФЛИНГ, ТП, ФЛИНГ, АИМ, ESP)
+-- ФУНКЦИОНАЛ (АНТИ-ФЛИНГ, ТП, ФЛИНГ, АИМ, ESP)
 -- ========================================================
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
@@ -206,33 +190,71 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- НАПОЛНЕНИЕ КНОПКАМИ СЕКЦИЙ ИНТЕРФЕЙСА
+-- НОВЫЙ СОБСТВЕННЫЙ GUI С НАДЕЖНЫМ СКРОЛЛОМ
 -- ========================================================
-Section1:NewToggle("ESP Подсветка Ролей", "Включает силуэты сквозь стены", function(state)
-	EspEnabled = state
-	for _, p in ipairs(Players:GetPlayers()) do updatePlayerESP(p) end
-end)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaMM2Hub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
 
-Section1:NewToggle("Хард Аимбот (Shift Lock)", "Автоприцел от 1-го лица", function(state)
-	AimbotEnabled = state
-end)
+-- Главное Окно
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 300, 0, 220) -- Компактное и легкое окошко
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
-Section1:NewToggle("Защита от флинга (Anti-Fling)", "Игнорирует чужой флинг", function(state)
-	AntiFlingEnabled = state
-end)
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 14)
+MainCorner.Parent = MainFrame
 
-Section2:NewButton("💥 Флинг Убийцы", "Уничтожить маньяка раунда", function()
-	flingRole("Murderer")
-end)
+local TopLine = Instance.new("Frame")
+TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+TopLine.Size = UDim2.new(1, 0, 0, 4)
+TopLine.Parent = MainFrame
 
-Section2:NewButton("⚡ Флинг Шерифа", "Выбить пистолет из рук шерифа", function()
-	flingRole("Sheriff")
-end)
+-- Текст заголовка
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0.06, 0, 0.05, 0)
+Title.Size = UDim2.new(0, 200, 0, 25)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "FRUTIGER AERO HUB V14"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 3
+Title.Parent = MainFrame
 
-Section3:NewButton("⭐ Телепорт к Пестику", "Переместиться к пушке на полу", function()
-	teleportToGun()
-end)
+-- КНОПКА ЗАКРЫТИЯ Х (Вынесена отдельно на самый передний план)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+CloseBtn.Position = UDim2.new(0.86, 0, 0.06, 0)
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 13
+CloseBtn.ZIndex = 10 -- Жестко поверх всего
+CloseBtn.Parent = MainFrame
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
-Section3:NewButton("👣 Телепорт к Маньяку", "Прыгнуть за спину к убийце", function()
-	teleportToRole("Murderer")
-end)
+-- Синий глянцевый человечек
+local DeltaIcon = Instance.new("ImageButton")
+DeltaIcon.Name = "AeroHumanIcon"
+DeltaIcon.Image = "rbxassetid://9824248563" 
+DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+DeltaIcon.BackgroundTransparency = 0.2
+DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
+DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
+DeltaIcon.Visible = false
+DeltaIcon.Parent = ScreenGui
+Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
+
+-- 📜 НАДЕЖНОЕ ОКНО ПРОКРУТКИ КНОПОК (НА ЧИСТОМ КОДЕ)
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Name = "MainScroll"
