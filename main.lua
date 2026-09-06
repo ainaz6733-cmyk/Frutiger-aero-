@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V14 (CUSTOM LIGHT GUI & SCROLL)
+-- FRUTIGER AERO MM2 HUB V15 (ULTIMATE DOUBLE-COLUMN NO-BUG GUI)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -190,19 +190,19 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- НОВЫЙ СОБСТВЕННЫЙ GUI С НАДЕЖНЫМ СКРОЛЛОМ
+-- МОНОЛИТНЫЙ GUI В ДВЕ КОЛОНКИ (БЕЗ СКРОЛЛОВ И БАГОВ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Главное Окно
+-- Главное Окно (Сделано шире, чтобы поместились две колонки)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 220) -- Компактное и легкое окошко
+MainFrame.Position = UDim2.new(0.25, 0, 0.25, 0) -- По центру экрана мобилки
+MainFrame.Size = UDim2.new(0, 420, 0, 200) -- Идеальный горизонтальный размер
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
@@ -216,29 +216,29 @@ TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 4)
 TopLine.Parent = MainFrame
 
--- Текст заголовка
+-- Заголовок
 local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.06, 0, 0.05, 0)
-Title.Size = UDim2.new(0, 200, 0, 25)
+Title.Position = UDim2.new(0.04, 0, 0.05, 0)
+Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V14"
+Title.Text = "FRUTIGER AERO HUB V15"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.ZIndex = 3
 Title.Parent = MainFrame
 
--- КНОПКА ЗАКРЫТИЯ Х (Вынесена отдельно на самый передний план)
+-- РАБОЧИЙ КРЕСТИК Х (Сдвинут в правый угол широкого окна)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
-CloseBtn.Position = UDim2.new(0.86, 0, 0.06, 0)
+CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
 CloseBtn.Size = UDim2.new(0, 24, 0, 24)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 13
-CloseBtn.ZIndex = 10 -- Жестко поверх всего
+CloseBtn.ZIndex = 10
 CloseBtn.Parent = MainFrame
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
@@ -255,6 +255,4 @@ DeltaIcon.Visible = false
 DeltaIcon.Parent = ScreenGui
 Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
 
--- 📜 НАДЕЖНОЕ ОКНО ПРОКРУТКИ КНОПОК (НА ЧИСТОМ КОДЕ)
-local ScrollFrame = Instance.new("ScrollingFrame")
-ScrollFrame.Name = "MainScroll"
+-- ========================================================
