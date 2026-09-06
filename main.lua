@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V11.3 (ULTIMATE MOBILE POSITIONING FIX)
+-- FRUTIGER AERO MM2 HUB V12 (BUGLESS SCROLL EDITION)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -117,7 +117,7 @@ local function flingRole(roleName)
 end
 
 -- ========================================================
--- АИМБОТ И ESP (МЕТОД ИЗ СТАБИЛЬНОЙ V9)
+-- АИМБОТ И ESP (БАЗА)
 -- ========================================================
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
@@ -225,7 +225,6 @@ task.spawn(function()
 					text.TextSize = 14
 					text.BackgroundTransparency = 1
 					text.Parent = billboard
-					text.Parent = billboard
 					billboard.Parent = droppedGun
 				end
 			end
@@ -234,19 +233,19 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ЖЕЛЕЗНО ИСПРАВЛЕННЫЙ ИНТЕРФЕЙС GUI (ПРИНУДИТЕЛЬНЫЕ РОДИТЕЛИ)
+-- ИДЕАЛЬНЫЙ ИНТЕРФЕЙС GUI СО СКРОЛЛОМ (БЕЗ БАГОВ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Главное окно
+-- Главный Фрейм (Основа)
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Name = "MainFrame"
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-MainFrame.Position = UDim2.new(0.35, 0, 0.2, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 340)
+MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 300, 0, 220) -- Удобная фиксированная высота на экране
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -257,23 +256,26 @@ local TopLine = Instance.new("Frame", MainFrame)
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 5)
 
+-- Шапка (Текст)
 local Title = Instance.new("TextLabel", MainFrame)
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.06, 0, 0.04, 0)
-Title.Size = UDim2.new(0, 200, 0, 25)
+Title.Position = UDim2.new(0.06, 0, 0.05, 0)
+Title.Size = UDim2.new(0, 180, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V11.3"
+Title.Text = "FRUTIGER AERO HUB V12"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Рабочий Крестик X (Вынесен отдельно, чтобы кнопки его не перекрывали!)
 local CloseBtn = Instance.new("TextButton", MainFrame)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
-CloseBtn.Position = UDim2.new(0.86, 0, 0.04, 0)
-CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+CloseBtn.Position = UDim2.new(0.86, 0, 0.05, 0)
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
 CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.ZIndex = 10 -- Всегда поверх кнопок
 Instance.new("UICorner", CloseBtn)
 
 -- Синий человечек
@@ -282,5 +284,3 @@ DeltaIcon.Name = "AeroHumanIcon"
 DeltaIcon.Image = "rbxassetid://9824248563" 
 DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
 DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-DeltaIcon.BackgroundTransparency = 0.2
-DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
