@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V17 (AWP SKIN + FLING POSITION FIX)
+-- FRUTIGER AERO MM2 HUB V17.1 (FIXED SYNTAX)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -18,7 +18,6 @@ local Highlights = {}
 -- ========================================================
 -- СКИН-ЧЕЙНДЖЕР: ТРАНСФОРМАЦИЯ ПЕСТИКА В АВП (AWP SNIPER)
 -- ========================================================
--- Проверенные ID меша и текстуры снайперской винтовки AWP
 local AWP_MESH_ID = "rbxassetid://430310237"
 local AWP_TEXTURE_ID = "rbxassetid://430310255"
 
@@ -32,16 +31,14 @@ local function applyAwpSkin(gun)
 			handle.MeshId = AWP_MESH_ID
 			handle.TextureId = AWP_TEXTURE_ID
 		else
-			-- Если Handle обычный парт, создаем внутри сетку
 			local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
 			mesh.MeshId = AWP_MESH_ID
 			mesh.TextureId = AWP_TEXTURE_ID
-			mesh.Scale = Vector3.new(0.08, 0.08, 0.08) -- Идеальный размер под руку
+			mesh.Scale = Vector3.new(0.08, 0.08, 0.08)
 		end
 	end
 end
 
--- Слежка за инвентарем для мгновенной подмены скина
 local function monitorWeapons(char)
 	char.ChildAdded:Connect(function(child)
 		if child:IsA("Tool") and child.Name == "Gun" then
@@ -64,7 +61,7 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ИСПРАВЛЕННЫЙ ФЛИНГ (ОСТАЁШЬСЯ НА МЕСТЕ УБИЙСТВА)
+-- ИСПРАВЛЕННЫЙ ФЛИНГ
 -- ========================================================
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
@@ -74,14 +71,13 @@ local function flingTarget(targetPlayer)
 	
 	if myHrp and tHrp then
 		local oldAntiFling = AntiFlingEnabled
-		AntiFlingEnabled = false -- Временно тушим антифлинг для атаки
+		AntiFlingEnabled = false
 		
 		local bV = Instance.new("BodyAngularVelocity")
 		bV.MaxTorque = Vector3.new(1, 1, 1) * math.huge
 		bV.AngularVelocity = Vector3.new(0, 99999, 0)
 		bV.Parent = myHrp
 		
-		-- Крутимся и тарань врага
 		for i = 1, 20 do
 			if tHrp and myHrp then 
 				myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.2) 
@@ -90,8 +86,6 @@ local function flingTarget(targetPlayer)
 		end
 		
 		bV:Destroy()
-		-- ФИКС: Строка возврата назад ЗАКОММЕНТИРОВАНА. 
-		-- Теперь ты просто останешься стоять там, где только что уничтожил цель!
 		AntiFlingEnabled = oldAntiFling
 	end
 end
@@ -202,7 +196,9 @@ end
 
 task.spawn(function()
 	while task.wait(1) do
-		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) do
+		for _, player in ipairs(Players:GetPlayers()) do 
+			updatePlayerESP(player) 
+		end
 		local droppedGun = Workspace:FindFirstChild("GunDrop")
 		if droppedGun and droppedGun:IsA("BasePart") then
 			local gunHl = droppedGun:FindFirstChild("GunHighlight")
@@ -242,7 +238,6 @@ local function createSystemButton(text, pos, color, callback)
 	return btn
 end
 
--- Расставляем 6 кнопок ровным вертикальным рядом слева
 local EspBtn = createSystemButton("ESP: ВКЛ", UDim2.new(0.02, 0, 0.15, 0), Color3.fromRGB(0, 150, 255), function()
 	EspEnabled = not EspEnabled
 	_G.EspBtn.Text = EspEnabled and "ESP: ВКЛ" or "ESP: ВЫКЛ"
@@ -255,16 +250,20 @@ local AimBtn = createSystemButton("АИМБОТ: ВКЛ", UDim2.new(0.02, 0, 0.2
 	_G.AimBtn.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
 end) _G.AimBtn = AimBtn
 
--- ДОБАВЛЕННАЯ КНОПКА АНТИ-ФЛИНГА
 local AntiFlingBtn = createSystemButton("🛡️ АНТИ-ФЛИНГ: ВКЛ", UDim2.new(0.02, 0, 0.29, 0), Color3.fromRGB(0, 150, 255), function()
 	AntiFlingEnabled = not AntiFlingEnabled
 	_G.AntiFlingBtn.Text = AntiFlingEnabled and "🛡️ АНТИ-ФЛИНГ: ВКЛ" or "🛡️ АНТИ-ФЛИНГ: ВЫКЛ"
 	_G.AntiFlingBtn.BackgroundColor3 = AntiFlingEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
-end) _G.AntiFlingBtn = AntiFlingProtection
+end) _G.AntiFlingBtn = AntiFlingBtn
 
 createSystemButton("💥 ФЛИНГ МАНЬЯКА", UDim2.new(0.02, 0, 0.36, 0), Color3.fromRGB(255, 50, 50), function()
 	flingRole("Murderer")
 end)
 
 createSystemButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.02, 0, 0.43, 0), Color3.fromRGB(255, 120, 50), function()
-				
+	flingRole("Sheriff")
+end)
+
+createSystemButton("⭐ ТП К ПЕСТИКУ", UDim2.new(0.02, 0, 0.50, 0), Color3.fromRGB(255, 200, 0), function()
+	teleportToGun()
+end)
