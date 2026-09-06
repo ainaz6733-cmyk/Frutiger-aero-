@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V13.1 (KAVO UI - TOTALLY FIXED)
+-- FRUTIGER AERO MM2 HUB V14 (LIGHTWEIGHT KAVO VERSION)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -15,8 +15,24 @@ local AimbotEnabled = true
 local AntiFlingEnabled = true
 local Highlights = {}
 
+-- Подгружаем Kavo UI из быстрого внешнего источника (всего одна строка!)
+local KavoLibrary = loadstring(game:HttpGet("https://githubusercontent.com"))()
+
+-- Создаем меню (Frutiger Aero стиль — Aqua тема)
+local Window = KavoLibrary.CreateLib("FRUTIGER AERO HUB V14", "Aqua")
+
+-- СОЗДАЕМ РАЗДЕЛЫ (ВКЛАДКИ СЛЕВА)
+local Tab1 = Window:NewTab("Главная")
+local Tab2 = Window:NewTab("Бой (Fling)")
+local Tab3 = Window:NewTab("Телепорты")
+
+-- Создаем секции внутри вкладок
+local Section1 = Tab1:NewSection("Основные функции")
+local Section2 = Tab2:NewSection("Физика уничтожения")
+local Section3 = Tab3:NewSection("Перемещение")
+
 -- ========================================================
--- ФУНКЦИОНАЛ (АНТИ-ФЛИНГ, ТП, ФЛИНГ, АИМ, ESP)
+-- ЛОГИКА ФУНКЦИЙ (АНТИ-ФЛИНГ, ТП, ФЛИНГ, АИМ, ESP)
 -- ========================================================
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
@@ -190,51 +206,33 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ВШИТАЯ БИБЛИОТЕКА KAVO UI (РАБОТАЕТ АВТОНОМНО)
+-- НАПОЛНЕНИЕ КНОПКАМИ СЕКЦИЙ ИНТЕРФЕЙСА
 -- ========================================================
-local KavoLibrary = {}
-function KavoLibrary:CreateMenu()
-	local KavoGui = Instance.new("ScreenGui", CoreGui)
-	KavoGui.Name = "DeltaMM2Hub"
-	
-	local Main = Instance.new("Frame", KavoGui)
-	Main.Size = UDim2.new(0, 340, 0, 220)
-	Main.Position = UDim2.new(0.3, 0, 0.25, 0)
-	Main.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-	Main.Active = true Main.Draggable = true
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-	
-	local Top = Instance.new("Frame", Main)
-	Top.Size = UDim2.new(1, 0, 0, 30)
-	Top.BackgroundTransparency = 1
-	
-	local Line = Instance.new("Frame", Main)
-	Line.Size = UDim2.new(1, 0, 0, 3)
-	Line.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-	
-	local Title = Instance.new("TextLabel", Top)
-	Title.Text = "  FRUTIGER AERO HUB V13.1"
-	Title.Size = UDim2.new(0.7, 0, 1, 0)
-	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Title.Font = Enum.Font.GothamBold Title.TextSize = 12 Title.TextXAlignment = Enum.TextXAlignment.Left Title.BackgroundTransparency = 1
-	
-	local Close = Instance.new("TextButton", Top)
-	Close.Text = "X" Close.Size = UDim2.new(0, 24, 0, 24) Close.Position = UDim2.new(0.9, 0, 0.1, 0)
-	Close.BackgroundColor3 = Color3.fromRGB(40, 45, 50) Close.TextColor3 = Color3.fromRGB(255, 75, 75)
-	Close.Font = Enum.Font.GothamBold Close.TextSize = 12 Instance.new("UICorner", Close)
-	
-	local TabsFrame = Instance.new("Frame", Main)
-	TabsFrame.Size = UDim2.new(0, 90, 1, -35) TabsFrame.Position = UDim2.new(0, 5, 0, 32) TabsFrame.BackgroundTransparency = 1
-	local TabsList = Instance.new("UIListLayout", TabsFrame) TabsList.Padding = UDim.new(0, 4)
-	
-	local PagesFrame = Instance.new("Frame", Main)
-	PagesFrame.Size = UDim2.new(1, -105, 1, -40) PagesFrame.Position = UDim2.new(0, 100, 0, 35) PagesFrame.BackgroundTransparency = 1
+Section1:NewToggle("ESP Подсветка Ролей", "Включает силуэты сквозь стены", function(state)
+	EspEnabled = state
+	for _, p in ipairs(Players:GetPlayers()) do updatePlayerESP(p) end
+end)
 
-	local DeltaIcon = Instance.new("ImageButton", KavoGui)
-	DeltaIcon.Image = "rbxassetid://9824248563" DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-	DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25) DeltaIcon.BackgroundTransparency = 0.2
-	DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0) DeltaIcon.Size = UDim2.new(0, 50, 0, 50) DeltaIcon.Visible = false
-	Instance.new("UICorner", DeltaIcon)
+Section1:NewToggle("Хард Аимбот (Shift Lock)", "Автоприцел от 1-го лица", function(state)
+	AimbotEnabled = state
+end)
 
-	Close.MouseButton1Click:Connect(function() Main.Visible = false DeltaIcon.Visible = true end)
-	
+Section1:NewToggle("Защита от флинга (Anti-Fling)", "Игнорирует чужой флинг", function(state)
+	AntiFlingEnabled = state
+end)
+
+Section2:NewButton("💥 Флинг Убийцы", "Уничтожить маньяка раунда", function()
+	flingRole("Murderer")
+end)
+
+Section2:NewButton("⚡ Флинг Шерифа", "Выбить пистолет из рук шерифа", function()
+	flingRole("Sheriff")
+end)
+
+Section3:NewButton("⭐ Телепорт к Пестику", "Переместиться к пушке на полу", function()
+	teleportToGun()
+end)
+
+Section3:NewButton("👣 Телепорт к Маньяку", "Прыгнуть за спину к убийце", function()
+	teleportToRole("Murderer")
+end)
