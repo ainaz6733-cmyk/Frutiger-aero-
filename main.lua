@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V20 (GURANTEED FIXES + AWP + CORE GUI)
+-- FRUTIGER AERO MM2 HUB V22 (TEXT-INPUT SYSTEM GUI)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -13,106 +13,61 @@ end
 local EspEnabled = true
 local AimbotEnabled = true
 local AntiFlingEnabled = true
-local Highlights = {}
 
 -- ========================================================
--- ЖЕЛЕЗНЫЙ ПОИСК УПАВШЕГО ПИСТОЛЕТА (СКАНЕР ОБЪЕКТОВ)
+-- ФУНКЦИОНАЛ ЧИТА (ВСЕ ФИКСЫ ИЗ ПРОШЛЫХ ВЕРСИЙ)
 -- ========================================================
 local function findDroppedGun()
-	-- Ищем модельку GunDrop или любой Tool на полу, у которого имя Gun
 	for _, obj in ipairs(Workspace:GetDescendants()) do
-		if obj.Name == "GunDrop" and obj:IsA("BasePart") then
-			return obj
-		elseif obj.Name == "Gun" and obj:IsA("Model") and obj:FindFirstChild("Handle") then
-			return obj:FindFirstChild("Handle")
-		end
+		if obj.Name == "GunDrop" and obj:IsA("BasePart") then return obj
+		elseif obj.Name == "Gun" and obj:IsA("Model") and obj:FindFirstChild("Handle") then return obj:FindFirstChild("Handle") end
 	end
 	return nil
 end
 
--- ========================================================
--- РАБОЧИЙ СКИН-ЧЕЙНДЖЕР НА АВП (AWP SNIPER)
--- ========================================================
 local AWP_MESH_ID = "rbxassetid://430310237"
 local AWP_TEXTURE_ID = "rbxassetid://430310255"
 
 local function applyAwpSkin(tool)
 	if not tool or not tool:IsA("Tool") then return end
-	-- Проверяем, пистолет ли это (по имени или внутренним скриптам MM2)
 	if tool.Name == "Gun" or tool:FindFirstChild("GunCmd") or tool:FindFirstChild("GunServer") then
 		local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("MeshPart") or tool:FindFirstChildOfClass("SpecialMesh")
 		if handle then
-			if handle:IsA("MeshPart") then
-				handle.MeshId = AWP_MESH_ID
-				handle.TextureID = AWP_TEXTURE_ID
-			elseif handle:IsA("SpecialMesh") then
-				handle.MeshId = AWP_MESH_ID
-				handle.TextureId = AWP_TEXTURE_ID
+			if handle:IsA("MeshPart") then handle.MeshId = AWP_MESH_ID handle.TextureID = AWP_TEXTURE_ID
+			elseif handle:IsA("SpecialMesh") then handle.MeshId = AWP_MESH_ID handle.TextureId = AWP_TEXTURE_ID
 			else
-				-- Если это обычная деталь, создаем внутри сетку винтовки
 				local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
-				mesh.MeshId = AWP_MESH_ID
-				mesh.TextureId = AWP_TEXTURE_ID
-				mesh.Scale = Vector3.new(0.07, 0.07, 0.07) -- Отличный масштаб
+				mesh.MeshId = AWP_MESH_ID mesh.TextureId = AWP_TEXTURE_ID mesh.Scale = Vector3.new(0.07, 0.07, 0.07)
 			end
 		end
 	end
 end
 
--- Мониторинг рук и рюкзака
 local function monitorWeapons(char)
-	char.ChildAdded:Connect(function(child)
-		task.wait(0.3)
-		applyAwpSkin(child)
-	end)
+	char.ChildAdded:Connect(function(child) task.wait(0.3) applyAwpSkin(child) end)
 end
-
 if LocalPlayer.Character then monitorWeapons(LocalPlayer.Character) end
 LocalPlayer.CharacterAdded:Connect(monitorWeapons)
 
 task.spawn(function()
 	while task.wait(1) do
 		local bp = LocalPlayer:FindFirstChild("Backpack")
-		if bp then
-			for _, tool in ipairs(bp:GetChildren()) do applyAwpSkin(tool) end
-		end
+		if bp then for _, tool in ipairs(bp:GetChildren()) do applyAwpSkin(tool) end end
 	end
 end)
 
--- ========================================================
--- ИДЕАЛЬНЫЙ ФЛИНГ С МОМЕНТАЛЬНЫМ ВОЗВРАТОМ НА МЕСТО
--- ========================================================
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
-	local tChar = targetPlayer and targetPlayer.Character
-	local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
-	
+	local tHrp = targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
 	if myHrp and tHrp then
-		-- Жёстко фиксируем позицию ДО атаки
 		local oldCFrame = myHrp.CFrame
 		local oldAntiFling = AntiFlingEnabled
-		AntiFlingEnabled = false -- Отключаем защиту на долю секунды
-		
+		AntiFlingEnabled = false
 		local bV = Instance.new("BodyAngularVelocity")
-		bV.MaxTorque = Vector3.new(1, 1, 1) * math.huge
-		bV.AngularVelocity = Vector3.new(0, 99999, 0)
-		bV.Parent = myHrp
-		
-		-- Уничтожаем цель за 12 кадров (молниеносно)
-		for i = 1, 12 do
-			if tHrp and myHrp then 
-				myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.1) 
-			end
-			RunService.Heartbeat:Wait()
-		end
-		
-		bV:Destroy()
-		task.wait(0.05)
-		
-		-- Мгновенно возвращаем тебя в исходную точку
-		myHrp.CFrame = oldCFrame
-		AntiFlingEnabled = oldAntiFling
+		bV.MaxTorque = Vector3.new(1, 1, 1) * math.huge bV.AngularVelocity = Vector3.new(0, 99999, 0) bV.Parent = myHrp
+		for i = 1, 12 do if tHrp and myHrp then myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.1) end RunService.Heartbeat:Wait() end
+		bV:Destroy() task.wait(0.05) myHrp.CFrame = oldCFrame AntiFlingEnabled = oldAntiFling
 	end
 end
 
@@ -121,18 +76,12 @@ local function flingRole(roleName)
 		if player ~= LocalPlayer and player.Character then
 			local bp = player:FindFirstChild("Backpack")
 			local char = player.Character
-			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then 
-				flingTarget(player) return
-			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then 
-				flingTarget(player) return 
-			end
+			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then flingTarget(player) return
+			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then flingTarget(player) return end
 		end
 	end
 end
 
--- ========================================================
--- АНТИ-ФЛИНГ СИСТЕМА
--- ========================================================
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
 		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = true end end
@@ -144,17 +93,11 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- ========================================================
--- ТЕЛЕПОРТ, АИМБОТ И ESP
--- ========================================================
 local function teleportToGun()
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
 	local droppedGun = findDroppedGun()
-	
-	if myHrp and droppedGun then
-		myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0)
-	end
+	if myHrp and droppedGun then myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0) end
 end
 
 local function getPlayerRole(player)
@@ -223,53 +166,81 @@ task.spawn(function()
 	while task.wait(1) do
 		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) end
 		local droppedGun = findDroppedGun()
-		if droppedGun and droppedGun:IsA("BasePart") then
-			local gunHl = droppedGun:FindFirstChild("GunHighlight")
-			if EspEnabled and not gunHl then
-				gunHl = Instance.new("Highlight")
-				gunHl.Name = "GunHighlight"
-				gunHl.OutlineColor = Color3.fromRGB(255, 215, 0)
-				gunHl.Parent = droppedGun
-			end
+		if droppedGun and EspEnabled then
+			local gunHl = droppedGun:FindFirstChild("GunHighlight") or Instance.new("Highlight", droppedGun)
+			gunHl.Name = "GunHighlight" gunHl.OutlineColor = Color3.fromRGB(255, 215, 0) gunHl.Enabled = true
 		end
 	end
 end)
 
 -- ========================================================
--- ЛЁГКИЙ ГЛЯНЦЕВЫЙ GUI ИНТЕРФЕЙС (ПАТЧ ОТОБРАЖЕНИЯ)
+-- НЕУБИВАЕМЫЙ ТЕКСТОВЫЙ ИНТЕРФЕЙС GUI (БЕЗ РАМОК И БАГОВ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Чистая тёмно-лазурная панель
-local MainPanel = Instance.new("Frame")
-MainPanel.Name = "MainPanel"
-MainPanel.Size = UDim2.new(0, 160, 0, 260)
-MainPanel.Position = UDim2.new(0.02, 0, 0.15, 0)
-MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30) -- Фирменный цвет Frutiger Glass
-MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
-MainPanel.BorderSizePixel = 2
-MainPanel.Active = true
-MainPanel.Draggable = true
-MainPanel.ZIndex = 1
-MainPanel.Parent = ScreenGui
-Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 10)
+-- Создаем невидимый базовый фрейм для группировки (игра его не тронет)
+local MenuHolder = Instance.new("Frame", ScreenGui)
+MenuHolder.Name = "MenuHolder"
+MenuHolder.Size = UDim2.new(0, 200, 0, 240)
+MenuHolder.Position = UDim2.new(0.02, 0, 0.2, 0)
+MenuHolder.BackgroundTransparency = 1
 
--- Заголовок
-local Label = Instance.new("TextLabel", MainPanel)
-Label.Text = "AERO HUB V20"
-Label.Size = UDim2.new(1, 0, 0, 25)
-Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-Label.Font = Enum.Font.GothamBold Label.TextSize = 11 Label.BackgroundTransparency = 1
-Label.ZIndex = 3
+local UIList = Instance.new("UIListLayout", MenuHolder)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+UIList.Padding = UDim.new(0, 5)
 
--- КРЕСТИК Х (Жесткий приоритет клика)
-local CloseBtn = Instance.new("TextButton", MainPanel)
-CloseBtn.Size = UDim2.new(0, 20, 0, 20)
-CloseBtn.Position = UDim2.new(0.83, 0, 0.02, 0)
-CloseBtn.Text = "X" CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-CloseBtn.Font = Enum.Font.GothamBold CloseBtn.TextSize = 11
-CloseBtn.ZIndex = 10 -- Поверх всего
+-- Иконка раскрытия (Буква дельты)
+local OpenLabel = Instance.new("TextLabel", ScreenGui)
+OpenLabel.Size = UDim2.new(0, 45, 0, 45)
+OpenLabel.Position = UDim2.new(0.02, 0, 0.45, 0)
+OpenLabel.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+OpenLabel.Text = "[ Δ ]"
+OpenLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
+OpenLabel.Font = Enum.Font.GothamBold OpenLabel.TextSize = 16
+OpenLabel.Active = true OpenLabel.Visible = false
+Instance.new("UICorner", OpenLabel).CornerRadius = UDim.new(1, 0)
+
+-- Функция создания ТЕКСТОВЫХ кнопок (Они прогрузятся всегда!)
+local function createTextButton(text, color, order, callback)
+	local label = Instance.new("TextLabel", MenuHolder)
+	label.Size = UDim2.new(0, 180, 0, 26)
+	label.BackgroundColor3 = color
+	-- Эффект прозрачного Frutiger Aero стекла
+	label.BackgroundTransparency = 0.2
+	label.Text = "  " .. text .. "  "
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 11
+	label.LayoutOrder = order
+	label.Active = true
+	
+	Instance.new("UICorner", label).CornerRadius = UDim.new(0, 6)
+	
+	-- Слушатель мобильных тапов по тексту
+	label.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			callback(label)
+		end
+	end)
+	return label
+end
+
+-- Создаем кнопки
+local CloseToggle = createTextButton("[ ❌ ЗАКРЫТЬ МЕНЮ ]", Color3.fromRGB(255, 50, 50), 1, function()
+	MenuHolder.Visible = false
+	OpenLabel.Visible = true
+end)
+
+local EspToggle = createTextButton("🔵 ESP ПОДСВЕТКА: ВКЛ", Color3.fromRGB(0, 150, 255), 2, function(self)
+	EspEnabled = not EspEnabled
+	self.Text = EspEnabled and "🔵 ESP ПОДСВЕТКА: ВКЛ" or "⚪ ESP ПОДСВЕТКА: ВЫКЛ"
+	self.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(70, 80, 90)
+end)
+
+local AimToggle = createTextButton("🔵 ХАРД АИМБОТ: ВКЛ", Color3.fromRGB(0, 150, 255), 3, function(self)
+	AimbotEnabled = not AimbotEnabled
+	self.Text = AimbotEnabled and "🔵 ХАРД АИМБОТ: ВКЛ" or "⚪ ХАРД АИМБОТ: ВЫКЛ"
+		
