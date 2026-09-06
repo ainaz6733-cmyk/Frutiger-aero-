@@ -1,9 +1,10 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
--- Полная очистка старых версий
+-- Очистка старых меню
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -11,108 +12,122 @@ end
 local EspEnabled = true
 
 -- ========================================================
--- 1. НАДЁЖНОЕ ОПРЕДЕЛЕНИЕ РОЛЕЙ (ПО МЕТОДУ VORTEX HUB)
+-- 1. НАДЁЖНЫЙ СКАНЕР РОЛЕЙ (ПО НАЛИЧИЮ ОРУЖИЯ В ХИТБОКСЕ)
 -- ========================================================
--- Скрипт проверяет не только наличие оружия в руках, но и заглядывает 
--- во внутренние папки данных раунда MM2
 local function getPlayerRole(player)
-    if not player then return "Innocent" end
-    
-    local character = player.Character
-    local backpack = player:FindFirstChild("Backpack")
-    
-    -- Проверка на Убийцу
-    if (backpack and backpack:FindFirstChild("Knife")) or (character and character:FindFirstChild("Knife")) then
-        return "Murderer"
-    end
-    
-    -- Проверка на Шерифа/Героя
-    if (backpack and backpack:FindFirstChild("Gun")) or (character and character:FindFirstChild("Gun")) then
-        return "Sheriff"
-    end
-    
-    -- Дополнительная проверка через логику MM2 (ищем эффекты и скрытые свойства)
-    if player:FindFirstChild("PlayerData") and player.PlayerData:FindFirstChild("Role") then
-        local roleValue = player.PlayerData.Role.Value
-        if roleValue == "Murderer" then return "Murderer" end
-        if roleValue == "Sheriff" or roleValue == "Hero" then return "Sheriff" end
-    end
-    
-    return "Innocent"
+	if not player then return "Innocent" end
+	local char = player.Character
+	local bp = player:FindFirstChild("Backpack")
+	
+	-- Проверяем Убийцу (в руках или в рюкзаке)
+	if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
+		return "Murderer"
+	end
+	
+	-- Проверяем Шерифа (в руках или в рюкзаке)
+	if (bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun")) then
+		return "Sheriff"
+	end
+	
+	-- Ищем оружие на самом теле персонажа (когда оно убрано в кобуру/за спину)
+	if char then
+		for _, item in ipairs(char:GetChildren()) do
+			if item:IsA("Tool") then
+				if item.Name == "Knife" then return "Murderer" end
+				if item.Name == "Gun" then return "Sheriff" end
+			end
+		end
+	end
+	
+	return "Innocent"
 end
 
 local function getRoleColor(player)
-    local role = getPlayerRole(player)
-    if role == "Murderer" then
-        return Color3.fromRGB(255, 0, 50) -- Насыщенный красный
-    elseif role == "Sheriff" then
-        return Color3.fromRGB(0, 100, 255) -- Яркий синий
-    end
-    return Color3.fromRGB(0, 255, 100) -- Зелёный для мирных
+	local role = getPlayerRole(player)
+	if role == "Murderer" then
+		return Color3.fromRGB(255, 0, 50) -- Красный для Убийцы
+	elseif role == "Sheriff" then
+		return Color3.fromRGB(0, 100, 255) -- Синий для Шерифа
+	end
+	return Color3.fromRGB(0, 255, 100) -- Зелёный для Мирных
 end
 
 -- ========================================================
--- 2. СИСТЕМА ESP (АККУРАТНЫЕ ХАЙЛАЙТЫ)
+-- 2. ОБНОВЛЕННАЯ СИСТЕМА ESP И ДЕТЕКТОР УПАВШЕГО ПИСТОЛЕТА
 -- ========================================================
 local function applyESP(player)
 	if player == LocalPlayer then return end
 	
 	local function setupHighlight(character)
-		task.wait(0.2)
-		
-		-- Удаляем старый, если он забагался
+		task.wait(0.5)
 		if character:FindFirstChild("DeltaHighlight") then
 			character.DeltaHighlight:Destroy()
 		end
 		
-		local highlight = Instance.new("Highlight")
-		highlight.Name = "DeltaHighlight"
-		highlight.Parent = character
-		highlight.OutlineTransparency = 0
-		highlight.FillTransparency = 0.5
+		local hl = Instance.new("Highlight")
+		hl.Name = "DeltaHighlight"
+		hl.Parent = character
+		hl.OutlineTransparency = 0
+		hl.FillTransparency = 0.5
 		
-		-- Цикл постоянного контроля роли и переключателя GUI
-		local connection
-		connection = RunService.RenderStepped:Connect(function()
-			if not character or not character:Parent() or not highlight or not highlight.Parent then
-				if connection then connection:Disconnect() end
+		local conn
+		conn = RunService.RenderStepped:Connect(function()
+			if not character or not character:Parent() or not hl or not hl.Parent then
+				if conn then conn:Disconnect() end
 				return
 			end
-			
 			if EspEnabled then
-				highlight.Enabled = true
-				local color = getRoleColor(player)
-				highlight.OutlineColor = color
-				highlight.FillColor = color
+				hl.Enabled = true
+				local c = getRoleColor(player)
+				hl.OutlineColor = c
+				hl.FillColor = c
 			else
-				highlight.Enabled = false
+				hl.Enabled = false
 			end
 		end)
 	end
-	
 	if player.Character then setupHighlight(player.Character) end
 	player.CharacterAdded:Connect(setupHighlight)
 end
 
--- Запуск на всех игроков
 for _, p in ipairs(Players:GetPlayers()) do applyESP(p) end
 Players.PlayerAdded:Connect(applyESP)
 
+-- ПОДСФЕТКА УПАВШЕГО ПИСТОЛЕТА (GUN ESP)
+task.spawn(function()
+	while task.wait(1) do
+		if EspEnabled then
+			-- Ищем пистолет на полу карты (в MM2 он обычно падает прямо в Workspace)
+			local droppedGun = Workspace:FindFirstChild("GunDrop")
+			if droppedGun and droppedGun:IsA("BasePart") then
+				if not droppedGun:FindFirstChild("GunHighlight") then
+					local gunHl = Instance.new("Highlight")
+					gunHl.Name = "GunHighlight"
+					gunHl.Parent = droppedGun
+					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0) -- Яркий золотой/жёлтый цвет
+					gunHl.FillColor = Color3.fromRGB(255, 215, 0)
+					gunHl.FillTransparency = 0.3
+					gunHl.OutlineTransparency = 0
+				end
+			end
+		end
+	end
+end)
+
 -- ========================================================
--- 3. ОБНОВЛЕННЫЙ GUI (БЕЗ ФАРМА)
+-- 3. ИНТЕРФЕЙС GUI
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- Главная панель
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 MainFrame.Position = UDim2.new(0.35, 0, 0.35, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 140) -- Сделали компактнее, так как фарм убран
+MainFrame.Size = UDim2.new(0, 300, 0, 140)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -120,7 +135,6 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
--- Неоновая полоска сверху для стиля
 local TopLine = Instance.new("Frame")
 TopLine.Parent = MainFrame
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
@@ -130,19 +144,17 @@ local TopLineCorner = Instance.new("UICorner")
 TopLineCorner.CornerRadius = UDim.new(0, 12)
 TopLineCorner.Parent = TopLine
 
--- Заголовок
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.06, 0, 0.1, 0)
 Title.Size = UDim2.new(0, 180, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "DELTA ESP BASE"
+Title.Text = "DELTA ESP BASE v3"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Кнопка Х (Сворачивание)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = MainFrame
 CloseBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
@@ -157,7 +169,6 @@ local CloseCorner = Instance.new("UICorner")
 CloseCorner.CornerRadius = UDim.new(1, 0)
 CloseCorner.Parent = CloseBtn
 
--- Круглая иконка Delta
 local DeltaIcon = Instance.new("TextButton")
 DeltaIcon.Name = "DeltaIcon"
 DeltaIcon.Parent = ScreenGui
@@ -174,7 +185,6 @@ local IconCorner = Instance.new("UICorner")
 IconCorner.CornerRadius = UDim.new(1, 0)
 IconCorner.Parent = DeltaIcon
 
--- Кнопка переключения ESP
 local EspToggle = Instance.new("TextButton")
 EspToggle.Parent = MainFrame
 EspToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
@@ -189,9 +199,6 @@ local EspCorner = Instance.new("UICorner")
 EspCorner.CornerRadius = UDim.new(0, 8)
 EspCorner.Parent = EspToggle
 
--- ========================================================
--- 4. ИНТЕРФЕЙСНАЯ ЛОГИКА
--- ========================================================
 EspToggle.MouseButton1Click:Connect(function()
 	EspEnabled = not EspEnabled
 	if EspEnabled then
@@ -212,5 +219,3 @@ DeltaIcon.MouseButton1Click:Connect(function()
 	DeltaIcon.Visible = false
 	MainFrame.Visible = true
 end)
-
-print("Delta Hub: Скрипт успешно обновлён до версии v2!")
