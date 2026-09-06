@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V31 (CLICK UNLOCKED)
+-- FRUTIGER AERO MM2 HUB V32 (ABSOLUTE CLICK UNLOCKED • NO-PARENT SEGMENTATION)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Зачистка старых окон
+-- Зачистка старых окон из памяти игры
 if CoreGui:FindFirstChild("DeltaMM2Hub") then CoreGui.DeltaMM2Hub:Destroy() end
 if CoreGui:FindFirstChild("DeltaMM2Icon") then CoreGui.DeltaMM2Icon:Destroy() end
 
@@ -173,7 +173,7 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- РАЗБЛОКИРОВАННЫЙ GUI (ФИКС КЛИКОВ ЧЕРЕЗ ШАПКУ)
+-- ИСПРАВЛЕННЫЙ GUI (ПРИНУДИТЕЛЬНАЯ РАЗБЛОКИРОВКА ТАПОВ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
@@ -185,83 +185,84 @@ IconGui.Name = "DeltaMM2Icon"
 IconGui.ResetOnSpawn = false
 IconGui.Parent = CoreGui
 
--- Главная панель (ФИКС: Active и Draggable = false, чтобы кнопки нажимались!)
+-- Тонкая невидимая шапка (ФИКС: Только она отвечает за перемещение!)
+local DragHeader = Instance.new("Frame", ScreenGui)
+DragHeader.Name = "DragHeader"
+DragHeader.Size = UDim2.new(0, 420, 0, 30)
+DragHeader.Position = UDim2.new(0.25, 0, 0.25, 0) -- Дефолтная позиция на экране
+DragHeader.BackgroundTransparency = 1
+DragHeader.Active = true
+DragHeader.Draggable = true
+DragHeader.ZIndex = 12
+
+-- Главный задний фон (ФИКС: Он больше не ворует клики!)
 local MainPanel = Instance.new("Frame", ScreenGui)
 MainPanel.Name = "MainPanel"
 MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
 MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
-MainPanel.Position = UDim2.new(0.25, 0, 0.25, 0)
 MainPanel.Size = UDim2.new(0, 420, 0, 180) 
 MainPanel.Active = false
 MainPanel.Draggable = false
+MainPanel.ZIndex = 1
 Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 12)
-
--- Тонкая невидимая шапка СВЕРХУ меню (ФИКС: Только за неё можно двигать меню!)
-local DragHeader = Instance.new("Frame", MainPanel)
-DragHeader.Name = "DragHeader"
-DragHeader.Size = UDim2.new(1, 0, 0, 30)
-DragHeader.Position = UDim2.new(0, 0, 0, 0)
-DragHeader.BackgroundTransparency = 1
-DragHeader.Active = true
-DragHeader.Draggable = true
-
--- Скрипт перетаскивания всего меню вслед за шапкой
-DragHeader.Changed:Connect(function()
-	MainPanel.Position = DragHeader.Position
-end)
 
 local TopLine = Instance.new("Frame", MainPanel)
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 4)
+TopLine.ZIndex = 2
 
 local Title = Instance.new("TextLabel", MainPanel)
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V31"
+Title.Text = "FRUTIGER AERO HUB V32"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 3
 
--- Крестик X (Лежит на шапке)
-local CloseBtn = Instance.new("TextButton", MainPanel)
+-- Крестик X (ФИКС: Создан прямо в ScreenGui поверх всего!)
+local CloseBtn = Instance.new("TextButton", ScreenGui)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
 CloseBtn.Size = UDim2.new(0, 24, 0, 24)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 13
-CloseBtn.ZIndex = 10
+CloseBtn.ZIndex = 15
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- --- КНОПКИ (СЕЙЧАС ОНИ КЛИКАЮТСЯ НА 100%) ---
-local EspToggle = Instance.new("TextButton", MainPanel)
-EspToggle.Size = UDim2.new(0, 180, 0, 32)
-EspToggle.Position = UDim2.new(0.04, 0, 0.28, 0)
-EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
-EspToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-EspToggle.Font = Enum.Font.GothamBold; EspToggle.TextSize = 11; EspToggle.ZIndex = 5
-Instance.new("UICorner", EspToggle).CornerRadius = UDim.new(0, 6)
+-- Функция создания НАСТОЯЩИХ независимых кнопок прямо в ScreenGui
+local function createSubButton(text, offset, color)
+	local btn = Instance.new("TextButton", ScreenGui)
+	btn.Size = UDim2.new(0, 180, 0, 32)
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11
+	btn.ZIndex = 10 -- Максимальный приоритет тапа пальцем!
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	
+	-- Уникальный идентификатор смещения для привязки к окну
+	local myOffset = Instance.new("UDim2Value", btn)
+	myOffset.Name = "OffsetPosition"
+	myOffset.Value = offset
+	
+	return btn
+end
 
-local AimToggle = Instance.new("TextButton", MainPanel)
-AimToggle.Size = UDim2.new(0, 180, 0, 32)
-AimToggle.Position = UDim2.new(0.04, 0, 0.55, 0)
-AimToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-AimToggle.Text = "ХАРД АИМБОТ: ВКЛ"
-AimToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-AimToggle.Font = Enum.Font.GothamBold; AimToggle.TextSize = 11; AimToggle.ZIndex = 5
-Instance.new("UICorner", AimToggle).CornerRadius = UDim.new(0, 6)
-
-local AntiFlingToggle = Instance.new("TextButton", MainPanel)
+-- Сборка кнопок (Они привязаны к ScreenGui напрямую!)
+local EspToggle = createSubButton("ESP ПОДСВЕТКА: ВКЛ", UDim2.new(0.04, 0, 0.28, 0), Color3.fromRGB(0, 150, 255))
+local AimToggle = createSubButton("ХАРД АИМБОТ: ВКЛ", UDim2.new(0.04, 0, 0.55, 0), Color3.fromRGB(0, 150, 255))
+local AntiFlingToggle = createSubButton("🛡️ АНТИ-ФЛИНГ: ВКЛ", UDim2.new(0.04, 0, 0.82, 0), Color3.fromRGB(0, 150, 255))
 AntiFlingToggle.Size = UDim2.new(0, 180, 0, 28)
-AntiFlingToggle.Position = UDim2.new(0.04, 0, 0.82, 0)
-AntiFlingToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-AntiFlingToggle.Text = "🛡️ АНТИ-ФЛИНГ: ВКЛ"
-AntiFlingToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-AntiFlingToggle.Font = Enum.Font.GothamBold; AntiFlingToggle.TextSize = 11; AntiFlingToggle.ZIndex = 5
-Instance.new("UICorner", AntiFlingToggle).CornerRadius = UDim.new(0, 6)
+
+local FlingMurderBtn = createSubButton("💥 ФЛИНГ УБИЙЦЫ", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
+local FlingSheriffBtn = createSubButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.52, 0, 0.55, 0), Color3.fromRGB(255, 120, 50))
+local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2.new(0.52, 0, 0.82, 0), Color3.fromRGB(255, 200, 0))
+TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
+TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
 
