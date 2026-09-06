@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V15 (ULTIMATE DOUBLE-COLUMN NO-BUG GUI)
+-- FRUTIGER AERO MM2 HUB V15.1 (SYSTEM CORE GUI FIX)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
+-- Полная очистка старых версий
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -190,69 +191,66 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- МОНОЛИТНЫЙ GUI В ДВЕ КОЛОНКИ (БЕЗ СКРОЛЛОВ И БАГОВ)
+-- ЖЕЛЕЗНЫЙ ЖЕСТКИЙ СИСТЕМНЫЙ ИНТЕРФЕЙС (100% ВИДИМОСТЬ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Главное Окно (Сделано шире, чтобы поместились две колонки)
+-- Главное Окно (Используем яркий, принудительный рендер цвета)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-MainFrame.Position = UDim2.new(0.25, 0, 0.25, 0) -- По центру экрана мобилки
-MainFrame.Size = UDim2.new(0, 420, 0, 200) -- Идеальный горизонтальный размер
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 35) -- Насыщенный сине-темный
+MainFrame.BorderColor3 = Color3.fromRGB(0, 200, 255) -- Синяя рамка, чтобы окно было видно всегда
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 410, 0, 180) -- Фиксированный размер в 2 колонки
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.ZIndex = 1
 MainFrame.Parent = ScreenGui
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 14)
-MainCorner.Parent = MainFrame
-
-local TopLine = Instance.new("Frame")
-TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-TopLine.Size = UDim2.new(1, 0, 0, 4)
-TopLine.Parent = MainFrame
-
--- Заголовок
+-- Принудительный текст шапки
 local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V15"
+Title.Text = "FRUTIGER AERO HUB V15.1"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = 3
+Title.ZIndex = 2
 Title.Parent = MainFrame
 
--- РАБОЧИЙ КРЕСТИК Х (Сдвинут в правый угол широкого окна)
+-- КНОПКА ЗАКРЫТИЯ (Абсолютный приоритет видимости ZIndex = 10)
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
-CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.Position = UDim2.new(0.9, 0, 0.06, 0)
 CloseBtn.Size = UDim2.new(0, 24, 0, 24)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 13
+CloseBtn.TextSize = 12
 CloseBtn.ZIndex = 10
 CloseBtn.Parent = MainFrame
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- Синий глянцевый человечек
+-- Синий человечек
 local DeltaIcon = Instance.new("ImageButton")
 DeltaIcon.Name = "AeroHumanIcon"
 DeltaIcon.Image = "rbxassetid://9824248563" 
 DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-DeltaIcon.BackgroundTransparency = 0.2
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(20, 25, 35)
 DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
 DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
+DeltaIcon.ZIndex = 10
 DeltaIcon.Visible = false
 DeltaIcon.Parent = ScreenGui
 Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
 
--- ========================================================
+-- --- ЛЕВАЯ КОЛОНКА (ТУМБЛЕРЫ) ---
+local EspToggle = Instance.new("TextButton")
+EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+EspToggle.Position = UDim2.new(0.04, 0, 0.3, 0)
+EspToggle.Size = UDim2.new(0, 175, 0, 32)
