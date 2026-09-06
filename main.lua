@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V11.1 (FIXED LAYOUT + AUTO-SCROLL)
+-- FRUTIGER AERO MM2 HUB V11.2 (FIXED UI POSITIONING)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -233,19 +233,18 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ИСПРАВЛЕННЫЙ ИНТЕРФЕЙС GUI (АВТО-СЕТКА + СКРОЛЛ)
+-- ИСПРАВЛЕННЫЙ ИНТЕРФЕЙС GUI (РУЧНАЯ ПРОВЕРЕННАЯ СЕТКА)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- Главный фрейм (Заголовки и Шапка)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-MainFrame.Size = UDim2.new(0, 310, 0, 240) -- Фиксированная удобная высота меню
+MainFrame.Position = UDim2.new(0.35, 0, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 300, 0, 340) -- Жесткая высота под 7 крупных кнопок
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
@@ -261,10 +260,10 @@ TopLine.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.06, 0, 0.05, 0)
+Title.Position = UDim2.new(0.06, 0, 0.04, 0)
 Title.Size = UDim2.new(0, 200, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V11.1"
+Title.Text = "FRUTIGER AERO HUB V11.2"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -272,8 +271,8 @@ Title.Parent = MainFrame
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
-CloseBtn.Position = UDim2.new(0.86, 0, 0.05, 0)
-CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Position = UDim2.new(0.86, 0, 0.04, 0)
+CloseBtn.Size = UDim2.new(0, 26, 0, 26)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
 CloseBtn.Font = Enum.Font.GothamBold
@@ -286,3 +285,4 @@ DeltaIcon.Image = "rbxassetid://9824248563"
 DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
 DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
 DeltaIcon.BackgroundTransparency = 0.2
+DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
