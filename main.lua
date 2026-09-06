@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V15.1 (SYSTEM CORE GUI FIX)
+-- FRUTIGER AERO MM2 HUB V16 (SYSTEM CORE GUI EDITION)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Полная очистка старых версий
+-- Полная очистка прошлых багнутых версий интерфейса
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -191,66 +191,58 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ЖЕЛЕЗНЫЙ ЖЕСТКИЙ СИСТЕМНЫЙ ИНТЕРФЕЙС (100% ВИДИМОСТЬ)
+-- АБСОЛЮТНО НОВЫЙ ИНТЕРФЕЙС ИЗ ОФИЦИАЛЬНЫХ КНОПОК РОБЛОКСА
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Главное Окно (Используем яркий, принудительный рендер цвета)
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 35) -- Насыщенный сине-темный
-MainFrame.BorderColor3 = Color3.fromRGB(0, 200, 255) -- Синяя рамка, чтобы окно было видно всегда
-MainFrame.BorderSizePixel = 2
-MainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
-MainFrame.Size = UDim2.new(0, 410, 0, 180) -- Фиксированный размер в 2 колонки
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.ZIndex = 1
-MainFrame.Parent = ScreenGui
+-- Функция для быстрого создания неубиваемых системных кнопок
+local function createSystemButton(text, pos, color, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 140, 0, 32)
+	btn.Position = pos
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11
+	btn.ZIndex = 10
+	btn.Active = true
+	btn.Parent = ScreenGui
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = btn
+	
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
 
--- Принудительный текст шапки
-local Title = Instance.new("TextLabel")
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.04, 0, 0.05, 0)
-Title.Size = UDim2.new(0, 250, 0, 25)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V15.1"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 13
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = 2
-Title.Parent = MainFrame
+-- Расставляем кнопки аккуратными парами на экране (они 100% прогрузятся!)
+local EspBtn = createSystemButton("ESP: ВКЛ", UDim2.new(0.02, 0, 0.15, 0), Color3.fromRGB(0, 150, 255), function()
+	EspEnabled = not EspEnabled
+	_G.EspBtn.Text = EspEnabled and "ESP: ВКЛ" or "ESP: ВЫКЛ"
+	_G.EspBtn.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
+end)
+_G.EspBtn = EspBtn
 
--- КНОПКА ЗАКРЫТИЯ (Абсолютный приоритет видимости ZIndex = 10)
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-CloseBtn.Position = UDim2.new(0.9, 0, 0.06, 0)
-CloseBtn.Size = UDim2.new(0, 24, 0, 24)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 12
-CloseBtn.ZIndex = 10
-CloseBtn.Parent = MainFrame
+local AimBtn = createSystemButton("АИМБОТ: ВКЛ", UDim2.new(0.02, 0, 0.22, 0), Color3.fromRGB(0, 150, 255), function()
+	AimbotEnabled = not AimbotEnabled
+	_G.AimBtn.Text = AimbotEnabled and "АИМБОТ: ВКЛ" or "АИМБОТ: ВЫКЛ"
+	_G.AimBtn.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
+end)
+_G.AimBtn = AimBtn
 
--- Синий человечек
-local DeltaIcon = Instance.new("ImageButton")
-DeltaIcon.Name = "AeroHumanIcon"
-DeltaIcon.Image = "rbxassetid://9824248563" 
-DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(20, 25, 35)
-DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
-DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
-DeltaIcon.ZIndex = 10
-DeltaIcon.Visible = false
-DeltaIcon.Parent = ScreenGui
-Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
+createSystemButton("💥 ФЛИНГ МАНЬЯКА", UDim2.new(0.02, 0, 0.29, 0), Color3.fromRGB(255, 50, 50), function()
+	flingRole("Murderer")
+end)
 
--- --- ЛЕВАЯ КОЛОНКА (ТУМБЛЕРЫ) ---
-local EspToggle = Instance.new("TextButton")
-EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-EspToggle.Position = UDim2.new(0.04, 0, 0.3, 0)
-EspToggle.Size = UDim2.new(0, 175, 0, 32)
+createSystemButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.02, 0, 0.36, 0), Color3.fromRGB(255, 120, 50), function()
+	flingRole("Sheriff")
+end)
+
+createSystemButton("⭐ ТП К ПЕСТИКУ", UDim2.new(0.02, 0, 0.43, 0), Color3.fromRGB(255, 200, 0), function()
+	teleportToGun()
+end)
