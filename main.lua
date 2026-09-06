@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V11 (ESP + HARD AIM + FLING + TP + ANTI-FLING)
+-- FRUTIGER AERO MM2 HUB V11.1 (FIXED LAYOUT + AUTO-SCROLL)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -12,27 +12,21 @@ end
 
 local EspEnabled = true
 local AimbotEnabled = true
-local AntiFlingEnabled = true -- По умолчанию защита ВКЛЮЧЕНА
+local AntiFlingEnabled = true
 local Highlights = {}
 
 -- ========================================================
--- СИСТЕМА АНТИ-ФЛИНГА (ANTI-FLING PROTECTION)
+-- СИСТЕМА АНТИ-ФЛИНГА
 -- ========================================================
--- Отключает физическое столкновение с другими персонажами, чтобы тебя не флинганули
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
 		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = true -- Твоё тело стоит прочно
-			end
+			if part:IsA("BasePart") then part.CanCollide = true end
 		end
-		
 		for _, player in ipairs(Players:GetPlayers()) do
 			if player ~= LocalPlayer and player.Character then
 				for _, part in ipairs(player.Character:GetChildren()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = false -- Чужие персонажи проходят сквозь тебя
-					end
+					if part:IsA("BasePart") then part.CanCollide = false end
 				end
 			end
 		end
@@ -78,7 +72,7 @@ local function teleportToGun()
 end
 
 -- ========================================================
--- МОЩНЫЙ ФЛИНГ (FLING SYSTEM)
+-- СИСТЕМА ФЛИНГА
 -- ========================================================
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
@@ -88,8 +82,6 @@ local function flingTarget(targetPlayer)
 	
 	if myHrp and tHrp then
 		local oldCFrame = myHrp.CFrame
-		
-		-- Временно выключаем анти-флинг для себя, чтобы физика сработала на врага
 		local oldAntiFling = AntiFlingEnabled
 		AntiFlingEnabled = false
 		
@@ -99,15 +91,13 @@ local function flingTarget(targetPlayer)
 		bV.Parent = myHrp
 		
 		for i = 1, 25 do
-			if tHrp and myHrp then
-				myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.3)
-			end
+			if tHrp and myHrp then myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.3) end
 			RunService.Heartbeat:Wait()
 		end
 		
 		bV:Destroy()
 		myHrp.CFrame = oldCFrame
-		AntiFlingEnabled = oldAntiFling -- Возвращаем защиту
+		AntiFlingEnabled = oldAntiFling
 	end
 end
 
@@ -118,18 +108,16 @@ local function flingRole(roleName)
 			local char = player.Character
 			
 			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then
-				flingTarget(player)
-				return
+				flingTarget(player) return
 			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then
-				flingTarget(player)
-				return
+				flingTarget(player) return
 			end
 		end
 	end
 end
 
 -- ========================================================
--- ОПРЕДЕЛЕНИЕ РОЛЕЙ И ЖЕСТКИЙ АИМ (ИЗ V9)
+-- АИМБОТ И ESP (БАЗА ИЗ V9)
 -- ========================================================
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
@@ -180,14 +168,10 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- ========================================================
--- ПОДСВЕТКА ИГРОКОВ И УПАВШЕГО ПИСТОЛЕТА
--- ========================================================
 local function updatePlayerESP(player)
 	if player == LocalPlayer or not player.Character then return end
 	local char = player.Character
 	
-	-- Подсветка пестика в руках живого Шерифа (Синий неон)
 	local gunInHand = char:FindFirstChild("Gun")
 	if gunInHand and not gunInHand:FindFirstChild("GunGlow") then
 		local glow = Instance.new("BoxHandleAdornment")
@@ -249,18 +233,19 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- НОВЫЙ GUI ИНТЕРФЕЙС V11 (МАКСИМАЛЬНЫЙ)
+-- ИСПРАВЛЕННЫЙ ИНТЕРФЕЙС GUI (АВТО-СЕТКА + СКРОЛЛ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
+-- Главный фрейм (Заголовки и Шапка)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-MainFrame.Position = UDim2.new(0.35, 0, 0.2, 0)
-MainFrame.Size = UDim2.new(0, 320, 0, 340) -- Ещё больше места под новые кнопки
+MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 310, 0, 240) -- Фиксированная удобная высота меню
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
@@ -276,14 +261,28 @@ TopLine.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.06, 0, 0.04, 0)
+Title.Position = UDim2.new(0.06, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 200, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V11"
+Title.Text = "FRUTIGER AERO HUB V11.1"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
+Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = MainFrame
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
+CloseBtn.Position = UDim2.new(0.86, 0, 0.05, 0)
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = MainFrame
+Instance.new("UICorner").Parent = CloseBtn
+
+local DeltaIcon = Instance.new("ImageButton")
+DeltaIcon.Name = "AeroHumanIcon"
+DeltaIcon.Image = "rbxassetid://9824248563" 
+DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+DeltaIcon.BackgroundTransparency = 0.2
