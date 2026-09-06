@@ -1,6 +1,5 @@
--- FRUTIGER AERO MM2 HUB V3 (MOBILE OPTIMIZED)
+-- FRUTIGER AERO MM2 HUB V4 (PERFECTLY OPTIMIZED)
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
@@ -10,87 +9,100 @@ if CoreGui:FindFirstChild("DeltaMM2Hub") then
 end
 
 local EspEnabled = true
+local Highlights = {} -- Тут хранятся все созданные обводки
 
--- Логика ролей
+-- ОЧЕНЬ ПРОСТАЯ И БЫСТРАЯ ПРОВЕРКА РОЛИ (Только реальное оружие)
 local function getRoleColor(player)
 	if not player or not player.Character then return Color3.fromRGB(0, 255, 100) end
+	
+	-- Проверяем только то, что реально в руках или в рюкзаке прямо сейчас
 	local bp = player:FindFirstChild("Backpack")
 	local char = player.Character
 	
 	if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
-		return Color3.fromRGB(255, 0, 50) -- Красный
+		return Color3.fromRGB(255, 0, 50) -- Красный (Убийца)
 	elseif (bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun")) then
-		return Color3.fromRGB(0, 100, 255) -- Синий
+		return Color3.fromRGB(0, 100, 255) -- Синий (Шериф)
 	end
 	
-	local normalFolder = Workspace:FindFirstChild("Normal")
-	if normalFolder then
-		local knifeModel = normalFolder:FindFirstChild("Knife")
-		local gunModel = normalFolder:FindFirstChild("Gun")
-		if knifeModel and knifeModel:FindFirstChild("Player") and knifeModel.Player.Value == player.Name then return Color3.fromRGB(255, 0, 50) end
-		if gunModel and gunModel:FindFirstChild("Player") and gunModel.Player.Value == player.Name then return Color3.fromRGB(0, 100, 255) end
-	end
-	return Color3.fromRGB(0, 255, 100) -- Зелёный
+	return Color3.fromRGB(0, 255, 100) -- Зелёный (Мирный)
 end
 
--- Система ESP
-local function applyESP(player)
-	if player == LocalPlayer then return end
-	local function setupHighlight(character)
-		task.wait(0.5)
-		if character:FindFirstChild("DeltaHighlight") then character.DeltaHighlight:Destroy() end
-		
-		local hl = Instance.new("Highlight")
+-- Функция обновления цвета для конкретного игрока
+local function updatePlayerESP(player)
+	if player == LocalPlayer or not player.Character then return end
+	local char = player.Character
+	
+	local hl = char:FindFirstChild("DeltaHighlight")
+	if not hl and EspEnabled then
+		hl = Instance.new("Highlight")
 		hl.Name = "DeltaHighlight"
 		hl.OutlineTransparency = 0
 		hl.FillTransparency = 0.6
-		hl.Parent = character
-		
-		local conn
-		conn = RunService.RenderStepped:Connect(function()
-			if not character or not character:Parent() or not hl or not hl.Parent then
-				if conn then conn:Disconnect() end
-				return
-			end
-			if EspEnabled then
-				hl.Enabled = true
-				local color = getRoleColor(player)
-				hl.OutlineColor = color
-				hl.FillColor = color
-			else
-				hl.Enabled = false
-			end
-		end)
+		hl.Parent = char
+		table.insert(Highlights, hl)
 	end
-	if player.Character then setupHighlight(player.Character) end
-	player.CharacterAdded:Connect(setupHighlight)
+	
+	if hl then
+		if EspEnabled then
+			hl.Enabled = true
+			local color = getRoleColor(player)
+			hl.OutlineColor = color
+			hl.FillColor = color
+		else
+			hl.Enabled = false
+		end
+	end
+end
+
+-- Слежка за добавлением персонажей
+local function applyESP(player)
+	if player == LocalPlayer then return end
+	player.CharacterAdded:Connect(function(char)
+		task.wait(0.5)
+		updatePlayerESP(player)
+	end)
 end
 
 for _, p in ipairs(Players:GetPlayers()) do applyESP(p) end
 Players.PlayerAdded:Connect(applyESP)
 
--- Подсветка упавшего пистолета
+-- Быстрый и легкий таймер обновлений вместо тяжелого цикла
 task.spawn(function()
 	while task.wait(1) do
-		if EspEnabled then
-			local droppedGun = Workspace:FindFirstChild("GunDrop")
-			if droppedGun and droppedGun:IsA("BasePart") then
-				if not droppedGun:FindFirstChild("GunHighlight") then
-					local gunHl = Instance.new("Highlight")
+		for _, player in ipairs(Players:GetPlayers()) do
+			updatePlayerESP(player)
+		end
+	end
+end)
+
+-- Подсветка упавшего пистолета
+task.spawn(function()
+	while task.wait(2) do
+		local droppedGun = Workspace:FindFirstChild("GunDrop")
+		if droppedGun and droppedGun:IsA("BasePart") then
+			local gunHl = droppedGun:FindFirstChild("GunHighlight")
+			if EspEnabled then
+				if not gunHl then
+					gunHl = Instance.new("Highlight")
 					gunHl.Name = "GunHighlight"
 					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0)
 					gunHl.FillColor = Color3.fromRGB(255, 215, 0)
 					gunHl.FillTransparency = 0.3
 					gunHl.OutlineTransparency = 0
 					gunHl.Parent = droppedGun
+				else
+					gunHl.Enabled = true
 				end
+			else
+				if gunHl then gunHl.Enabled = false end
 			end
 		end
 	end
 end)
 
 -- ========================================================
--- ГЛЯНЦЕВЫЙ FRUTIGER AERO ИНТЕРФЕЙС GUI
+-- ИНТЕРФЕЙС GUI
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
@@ -104,31 +116,28 @@ MainFrame.Position = UDim2.new(0.35, 0, 0.35, 0)
 MainFrame.Size = UDim2.new(0, 300, 0, 140)
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.ClipsDescendants = true -- Скрывает лишнее по краям
+MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 14)
 MainCorner.Parent = MainFrame
 
--- ФОНОВАЯ КАРТИНКА (Frutiger Aero Текстура)
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Name = "AeroBackground"
-BackgroundImage.Image = "rbxassetid://12558661621" -- Оригинальная Frutiger Aero текстура неба и травы
+BackgroundImage.Image = "rbxassetid://12558661621"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
-BackgroundImage.ImageTransparency = 0.3 -- Плавное наложение на тёмный фон
+BackgroundImage.ImageTransparency = 0.3
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ZIndex = 0 -- Задний план
+BackgroundImage.ZIndex = 0
 BackgroundImage.Parent = MainFrame
 
 local BgCorner = Instance.new("UICorner")
 BgCorner.CornerRadius = UDim.new(0, 14)
 BgCorner.Parent = BackgroundImage
 
--- Стеклянная неоновая полоска сверху
 local TopLine = Instance.new("Frame")
-TopLine.BackgroundColor3 = Color3.fromRGB(0, 220, 255) -- Лазурный эко-цвет
+TopLine.BackgroundColor3 = Color3.fromRGB(0, 220, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 5)
 TopLine.ZIndex = 1
 TopLine.Parent = MainFrame
@@ -137,7 +146,6 @@ local TopLineCorner = Instance.new("UICorner")
 TopLineCorner.CornerRadius = UDim.new(0, 14)
 TopLineCorner.Parent = TopLine
 
--- Заголовок
 local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.06, 0, 0.12, 0)
@@ -150,24 +158,9 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.ZIndex = 2
 Title.Parent = MainFrame
 
--- Тень под текстом для читаемости на фоне травы
-local TitleShadow = Instance.new("TextLabel")
-TitleShadow.BackgroundTransparency = 1
-TitleShadow.Position = UDim2.new(0.06, 1, 0.12, 1)
-TitleShadow.Size = UDim2.new(0, 200, 0, 25)
-TitleShadow.Font = Enum.Font.GothamBold
-TitleShadow.Text = "FRUTIGER AERO HUB"
-TitleShadow.TextColor3 = Color3.fromRGB(0, 0, 0)
-TitleShadow.TextSize = 14
-TitleShadow.TextTransparency = 0.5
-TitleShadow.TextXAlignment = Enum.TextXAlignment.Left
-TitleShadow.ZIndex = 1
-TitleShadow.Parent = MainFrame
-
--- Кнопка Х (Сворачивание)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.BackgroundTransparency = 0.8 -- Эффект стекла
+CloseBtn.BackgroundTransparency = 0.8
 CloseBtn.Position = UDim2.new(0.85, 0, 0.12, 0)
 CloseBtn.Size = UDim2.new(0, 26, 0, 26)
 CloseBtn.Font = Enum.Font.GothamBold
@@ -181,7 +174,6 @@ local CloseCorner = Instance.new("UICorner")
 CloseCorner.CornerRadius = UDim.new(1, 0)
 CloseCorner.Parent = CloseBtn
 
--- Круглая иконка Delta
 local DeltaIcon = Instance.new("TextButton")
 DeltaIcon.Name = "DeltaIcon"
 DeltaIcon.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
@@ -198,9 +190,8 @@ local IconCorner = Instance.new("UICorner")
 IconCorner.CornerRadius = UDim.new(1, 0)
 IconCorner.Parent = DeltaIcon
 
--- Кнопка переключения ESP (Аэро-голубая)
 local EspToggle = Instance.new("TextButton")
-EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- Лазурный глянцевый
+EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 EspToggle.Position = UDim2.new(0.06, 0, 0.48, 0)
 EspToggle.Size = UDim2.new(0, 264, 0, 40)
 EspToggle.Font = Enum.Font.GothamBold
@@ -214,7 +205,7 @@ local EspCorner = Instance.new("UICorner")
 EspCorner.CornerRadius = UDim.new(0, 8)
 EspCorner.Parent = EspToggle
 
--- Логика кнопок
+-- МГНОВЕННАЯ ЛОГИКА НАЖАТИЯ (Теперь без лагов)
 EspToggle.MouseButton1Click:Connect(function()
 	EspEnabled = not EspEnabled
 	if EspEnabled then
@@ -223,6 +214,10 @@ EspToggle.MouseButton1Click:Connect(function()
 	else
 		EspToggle.Text = "ESP ПОДСВЕТКА: ВЫКЛ"
 		EspToggle.BackgroundColor3 = Color3.fromRGB(80, 90, 100)
+	end
+	-- Принудительно обновляем всех игроков сразу после клика
+	for _, player in ipairs(Players:GetPlayers()) do
+		updatePlayerESP(player)
 	end
 end)
 
