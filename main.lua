@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V27 (CORE GUI EDITION - 100% FIXED)
+-- FRUTIGER AERO MM2 HUB V27.1 (CORE GUI BUTTON CLICK FIX)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -178,36 +178,24 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- НЕУБИВАЕМЫЙ ИСПРАВЛЕННЫЙ GUI КНОПОК ПО СЕТКЕ CORE GUI
+-- ИСПРАВЛЕННЫЙ GUI CORE GUI (ИСПРАВЛЕН ПОРЯДОК ХИТБОКСОВ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Синий глянцевый человечек для открытия (создан СРАЗУ, чтобы не было крашей)
-local DeltaIcon = Instance.new("ImageButton")
-DeltaIcon.Name = "AeroHumanIcon"
-DeltaIcon.Image = "rbxassetid://9824248563" 
-DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
-DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
-DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
-DeltaIcon.ZIndex = 10
-DeltaIcon.Visible = false
-DeltaIcon.Parent = ScreenGui
-Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
-
--- Главная плашка-подложка под кнопки
+-- Главная плашка-подложка под кнопки (Создается ПЕРВОЙ, чтобы быть внизу)
 local MainPanel = Instance.new("Frame")
 MainPanel.Name = "MainPanel"
 MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
 MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.25, 0, 0.25, 0)
-MainPanel.Size = UDim2.new(0, 420, 0, 180) -- Широкое горизонтальное окно в 2 колонки
+MainPanel.Size = UDim2.new(0, 420, 0, 180)
 MainPanel.Active = true
 MainPanel.Draggable = true
+MainPanel.ZIndex = 1
 MainPanel.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner", MainPanel)
@@ -216,19 +204,21 @@ MainCorner.CornerRadius = UDim.new(0, 12)
 local TopLine = Instance.new("Frame", MainPanel)
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 4)
+TopLine.ZIndex = 2
 
--- Шапка
+-- Заголовок
 local Title = Instance.new("TextLabel", MainPanel)
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V27"
+Title.Text = "FRUTIGER AERO HUB V27.1"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 3
 
--- КРЕСТИК Х (Жесткая позиция)
+-- КРЕСТИК Х (ZIndex вытолкнут максимально вперед)
 local CloseBtn = Instance.new("TextButton", MainPanel)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
@@ -237,7 +227,7 @@ CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 13
-CloseBtn.ZIndex = 10
+CloseBtn.ZIndex = 5
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
 -- Функция создания надежных кнопок
@@ -250,7 +240,7 @@ local function createSubButton(text, pos, color)
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 11
-	btn.ZIndex = 5
+	btn.ZIndex = 4 -- Кнопки лежат строго над фоном, но под крестиком
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 	return btn
 end
@@ -269,3 +259,13 @@ TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
 TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
 
 -- ЛОГИКА НАЖАТИЙ КНОПОК
+EspToggle.MouseButton1Click:Connect(function()
+	EspEnabled = not EspEnabled
+	EspToggle.Text = EspEnabled and "ESP ПОДСВЕТКА: ВКЛ" or "ESP ПОДСВЕТКА: ВЫКЛ"
+	EspToggle.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
+end)
+
+AimToggle.MouseButton1Click:Connect(function()
+	AimbotEnabled = not AimbotEnabled
+	AimToggle.Text = AimbotEnabled and "ХАРД АИМБОТ: ВКЛ" or "ХАРД АИМБОТ: ВЫКЛ"
+		
