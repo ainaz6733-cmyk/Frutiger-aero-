@@ -1,9 +1,8 @@
--- FRUTIGER AERO MM2 HUB V6 (PRO AIMBOT + ESP)
+-- FRUTIGER AERO MM2 HUB V9 (HARD LOCK CAM AIMBOT)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
@@ -13,11 +12,10 @@ end
 
 local EspEnabled = true
 local AimbotEnabled = true
-local IsHoldingScreen = false -- Проверка, зажат ли экран (для активации аима)
 local Highlights = {}
 
 -- ========================================================
--- ОПРЕДЕЛЕНИЕ РОЛЕЙ И ЦВЕТОВ
+-- ОПРЕДЕЛЕНИЕ РОЛЕЙ
 -- ========================================================
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
@@ -40,22 +38,7 @@ local function getRoleColor(player)
 end
 
 -- ========================================================
--- ПРОВЕРКА ВИДИМОСТИ ЦЕЛИ (RAYCAST БЕЗ СТЕН)
--- ========================================================
-local function isVisible(targetPart)
-	local origin = Camera.CFrame.Position
-	local direction = targetPart.Position - origin
-	local raycastParams = RaycastParams.new()
-	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-	-- Игнорируем себя и персонажа цели при проверке препятствий
-	raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, targetPart.Parent}
-	
-	local result = Workspace:Raycast(origin, direction, raycastParams)
-	return result == nil -- Если на пути луча ничего нет, цель видна
-end
-
--- ========================================================
--- УМНЫЙ ВЫБОР ЦЕЛИ ДЛЯ АИМБОТА
+-- УМНЫЙ ВЫБОР ЦЕЛИ
 -- ========================================================
 local function getBestTarget()
 	local localRole = getPlayerRole(LocalPlayer)
@@ -67,35 +50,23 @@ local function getBestTarget()
 			local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
 			if humanoid and humanoid.Health > 0 then
 				local targetPart = player.Character.HumanoidRootPart
+				
+				-- Дистанция между нами и целью
+				local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPart.Position).Magnitude
 				local targetRole = getPlayerRole(player)
 				
-				-- Проверяем дистанцию на экране (от центра экрана до игрока)
-				local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-				if onScreen and isVisible(targetPart) then
-					local screenSize = Camera.ViewportSize
-					local center = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
-					local distance = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-					
-					-- Логика Шерифа: фокус только на живого Маньяка
-					if localRole == "Sheriff" and targetRole == "Murderer" then
+				if localRole == "Sheriff" and targetRole == "Murderer" then
+					return player
+				elseif localRole == "Murderer" then
+					if targetRole == "Sheriff" then
 						return player
-					end
-					
-					-- Логика Маньяка: сначала Шериф, потом мирные
-					if localRole == "Murderer" then
-						if targetRole == "Sheriff" then
-							return player
-						elseif targetRole == "Innocent" and distance < shortestDistance then
-							shortestDistance = distance
-							closestPlayer = player
-						end
-					end
-					
-					-- Логика Мирного: целимся в маньяка для защиты
-					if localRole == "Innocent" and targetRole == "Murderer" and distance < shortestDistance then
+					elseif targetRole == "Innocent" and distance < shortestDistance then
 						shortestDistance = distance
 						closestPlayer = player
 					end
+				elseif localRole == "Innocent" and targetRole == "Murderer" and distance < shortestDistance then
+					shortestDistance = distance
+					closestPlayer = player
 				end
 			end
 		end
@@ -103,35 +74,25 @@ local function getBestTarget()
 	return closestPlayer
 end
 
--- Слежка за тапами по экрану на мобилке
-UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then return end
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		IsHoldingScreen = true
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		IsHoldingScreen = false
-	end
-end)
-
--- Плавный цикл наводки без тряски
+-- ========================================================
+-- ЖЕСТКАЯ НАВОДКА КАМЕРЫ ДЛЯ ПЕРВОГО ЛИЦА И SHIFT LOCK
+-- ========================================================
+-- Используем RenderStepped, чтобы наводка происходила быстрее, чем игра обрабатывает джойстик телефона
 RunService.RenderStepped:Connect(function()
-	if AimbotEnabled and IsHoldingScreen and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+	if AimbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local target = getBestTarget()
 		if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
 			local targetPart = target.Character.HumanoidRootPart
-			local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
-			-- Сглаживание 0.12 (Камера плавно прилипает к корпусу)
-			Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, 0.12)
+			
+			-- Жестко фиксируем позицию камеры так, чтобы центральный кружочек смотрел прямо в корпус врага
+			-- Это мгновенная наводка, которую управление мобилки не способно перебить
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
 		end
 	end
 end)
 
 -- ========================================================
--- СИСТЕМА ESP И ПОДСВЕТКА ОРУЖИЯ
+-- СИСТЕМА ESP
 -- ========================================================
 local function updatePlayerESP(player)
 	if player == LocalPlayer or not player.Character then return end
@@ -178,7 +139,7 @@ task.spawn(function()
 	end
 end)
 
--- Подсветка упавшей пушки
+-- Подсветка упавшего пистолета
 task.spawn(function()
 	while task.wait(2) do
 		local droppedGun = Workspace:FindFirstChild("GunDrop")
@@ -204,7 +165,7 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ИНТЕРФЕЙС GUI С СИНИМ ЧЕЛОВЕЧКОМ
+-- ИНТЕРФЕЙС GUI
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
@@ -213,35 +174,20 @@ ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
 MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 190)
+MainFrame.Size = UDim2.new(0, 300, 0, 180)
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 14)
 MainCorner.Parent = MainFrame
 
-local BackgroundImage = Instance.new("ImageLabel")
-BackgroundImage.Name = "AeroBackground"
-BackgroundImage.Image = "rbxassetid://12558661621"
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.ImageTransparency = 0.3
-BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ZIndex = 0
-BackgroundImage.Parent = MainFrame
-
-local BgCorner = Instance.new("UICorner")
-BgCorner.CornerRadius = UDim.new(0, 14)
-BgCorner.Parent = BackgroundImage
-
 local TopLine = Instance.new("Frame")
-TopLine.BackgroundColor3 = Color3.fromRGB(0, 220, 255)
+TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 5)
-TopLine.ZIndex = 1
 TopLine.Parent = MainFrame
 
 local TopLineCorner = Instance.new("UICorner")
@@ -253,23 +199,20 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.06, 0, 0.08, 0)
 Title.Size = UDim2.new(0, 200, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V6"
+Title.Text = "FRUTIGER AERO HUB V9"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = 2
 Title.Parent = MainFrame
 
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.BackgroundTransparency = 0.8
+CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
 CloseBtn.Position = UDim2.new(0.85, 0, 0.08, 0)
 CloseBtn.Size = UDim2.new(0, 26, 0, 26)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
 CloseBtn.TextSize = 12
-CloseBtn.ZIndex = 2
 CloseBtn.Parent = MainFrame
 
 local CloseCorner = Instance.new("UICorner")
@@ -280,7 +223,7 @@ local DeltaIcon = Instance.new("ImageButton")
 DeltaIcon.Name = "AeroHumanIcon"
 DeltaIcon.Image = "rbxassetid://9824248563" 
 DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
 DeltaIcon.BackgroundTransparency = 0.2
 DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
 DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
@@ -295,3 +238,62 @@ local EspToggle = Instance.new("TextButton")
 EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 EspToggle.Position = UDim2.new(0.06, 0, 0.32, 0)
 EspToggle.Size = UDim2.new(0, 264, 0, 38)
+EspToggle.Font = Enum.Font.GothamBold
+EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
+EspToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+EspToggle.TextSize = 12
+EspToggle.Parent = MainFrame
+
+local EspCorner = Instance.new("UICorner")
+EspCorner.CornerRadius = UDim.new(0, 8)
+EspCorner.Parent = EspToggle
+
+local AimToggle = Instance.new("TextButton")
+AimToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+AimToggle.Position = UDim2.new(0.06, 0, 0.62, 0)
+AimToggle.Size = UDim2.new(0, 264, 0, 38)
+AimToggle.Font = Enum.Font.GothamBold
+AimToggle.Text = "ХАРД АИМБОТ: ВКЛ"
+AimToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimToggle.TextSize = 12
+AimToggle.Parent = MainFrame
+
+local AimCorner = Instance.new("UICorner")
+AimCorner.CornerRadius = UDim.new(0, 8)
+AimCorner.Parent = AimToggle
+
+-- Логика переключателей
+EspToggle.MouseButton1Click:Connect(function()
+	EspEnabled = not EspEnabled
+	if EspEnabled then
+		EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
+		EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+	else
+		EspToggle.Text = "ESP ПОДСВЕТКА: ВЫКЛ"
+		EspToggle.BackgroundColor3 = Color3.fromRGB(80, 90, 100)
+	end
+	for _, player in ipairs(Players:GetPlayers()) do
+		updatePlayerESP(player)
+	end
+end)
+
+AimToggle.MouseButton1Click:Connect(function()
+	AimbotEnabled = not AimbotEnabled
+	if AimbotEnabled then
+		AimToggle.Text = "ХАРД АИМБОТ: ВКЛ"
+		AimToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+	else
+		AimToggle.Text = "ХАРД АИМБОТ: ВЫКЛ"
+		AimToggle.BackgroundColor3 = Color3.fromRGB(80, 90, 100)
+	end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	DeltaIcon.Visible = true
+end)
+
+DeltaIcon.MouseButton1Click:Connect(function()
+	DeltaIcon.Visible = false
+	MainFrame.Visible = true
+end)
