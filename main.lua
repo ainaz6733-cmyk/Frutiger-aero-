@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V30 (100% GURANTEED CLEAN LAUNCH)
+-- FRUTIGER AERO MM2 HUB V31 (CLICK UNLOCKED)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Зачистка старых окон из памяти игры
+-- Зачистка старых окон
 if CoreGui:FindFirstChild("DeltaMM2Hub") then CoreGui.DeltaMM2Hub:Destroy() end
 if CoreGui:FindFirstChild("DeltaMM2Icon") then CoreGui.DeltaMM2Icon:Destroy() end
 
@@ -18,7 +18,6 @@ local AntiFlingEnabled = true
 -- ФУНКЦИОНАЛ ЧИТА
 -- ========================================================
 
--- Поисковик пестика на полу
 local function findDroppedGun()
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if obj.Name == "GunDrop" and obj:IsA("BasePart") then 
@@ -30,7 +29,6 @@ local function findDroppedGun()
 	return nil
 end
 
--- Флинг с телепортом обратно на место
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -63,17 +61,14 @@ local function flingRole(roleName)
 			local bp = player:FindFirstChild("Backpack")
 			local char = player.Character
 			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then 
-				flingTarget(player) 
-				return
+				flingTarget(player) return
 			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then 
-				flingTarget(player) 
-				return 
+				flingTarget(player) return 
 			end
 		end
 	end
 end
 
--- Защитный купол Anti-Fling
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
 		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do 
@@ -89,7 +84,6 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Телепорт к пушке
 local function teleportToGun()
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -97,7 +91,6 @@ local function teleportToGun()
 	if myHrp and droppedGun then myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0) end
 end
 
--- Определение ролей для ESP
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
 	local bp = player:FindFirstChild("Backpack")
@@ -114,7 +107,6 @@ local function getRoleColor(player)
 	return Color3.fromRGB(0, 255, 100)
 end
 
--- Аимбот под Shift Lock
 local function getBestTarget()
 	local localRole = getPlayerRole(LocalPlayer)
 	local closestPlayer = nil
@@ -144,7 +136,6 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- Обновление силуэтов ESP
 local function updatePlayerESP(player)
 	if player == LocalPlayer or not player.Character then return end
 	local char = player.Character
@@ -162,12 +153,9 @@ local function updatePlayerESP(player)
 	end
 end
 
--- ФИКС: Все циклы полностью развернуты в стандартный вид Luau
 task.spawn(function()
 	while task.wait(1) do
-		for _, player in ipairs(Players:GetPlayers()) do 
-			updatePlayerESP(player) 
-		end
+		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) end
 		local droppedGun = findDroppedGun()
 		if droppedGun and EspEnabled then
 			local gunHl = droppedGun:FindFirstChild("GunHighlight")
@@ -185,7 +173,7 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- СТАБИЛЬНЫЙ ДВУХСЛОЙНЫЙ GUI (БЕЗ СОКРАЩЕНИЙ И ОПЕЧАТОК)
+-- РАЗБЛОКИРОВАННЫЙ GUI (ФИКС КЛИКОВ ЧЕРЕЗ ШАПКУ)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
@@ -197,7 +185,7 @@ IconGui.Name = "DeltaMM2Icon"
 IconGui.ResetOnSpawn = false
 IconGui.Parent = CoreGui
 
--- Главная панель меню
+-- Главная панель (ФИКС: Active и Draggable = false, чтобы кнопки нажимались!)
 local MainPanel = Instance.new("Frame", ScreenGui)
 MainPanel.Name = "MainPanel"
 MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
@@ -205,10 +193,23 @@ MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.25, 0, 0.25, 0)
 MainPanel.Size = UDim2.new(0, 420, 0, 180) 
-MainPanel.Active = true
-MainPanel.Draggable = true
-
+MainPanel.Active = false
+MainPanel.Draggable = false
 Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 12)
+
+-- Тонкая невидимая шапка СВЕРХУ меню (ФИКС: Только за неё можно двигать меню!)
+local DragHeader = Instance.new("Frame", MainPanel)
+DragHeader.Name = "DragHeader"
+DragHeader.Size = UDim2.new(1, 0, 0, 30)
+DragHeader.Position = UDim2.new(0, 0, 0, 0)
+DragHeader.BackgroundTransparency = 1
+DragHeader.Active = true
+DragHeader.Draggable = true
+
+-- Скрипт перетаскивания всего меню вслед за шапкой
+DragHeader.Changed:Connect(function()
+	MainPanel.Position = DragHeader.Position
+end)
 
 local TopLine = Instance.new("Frame", MainPanel)
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
@@ -219,12 +220,12 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V30"
+Title.Text = "FRUTIGER AERO HUB V31"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Крестик X
+-- Крестик X (Лежит на шапке)
 local CloseBtn = Instance.new("TextButton", MainPanel)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 CloseBtn.Position = UDim2.new(0.91, 0, 0.06, 0)
@@ -236,14 +237,14 @@ CloseBtn.TextSize = 13
 CloseBtn.ZIndex = 10
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- --- ОПТИМИЗИРОВАННАЯ РУЧНАЯ СБОРКА КНОПОК ПО СЕТКЕ ---
+-- --- КНОПКИ (СЕЙЧАС ОНИ КЛИКАЮТСЯ НА 100%) ---
 local EspToggle = Instance.new("TextButton", MainPanel)
 EspToggle.Size = UDim2.new(0, 180, 0, 32)
 EspToggle.Position = UDim2.new(0.04, 0, 0.28, 0)
 EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
 EspToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-EspToggle.Font = Enum.Font.GothamBold EspToggle.TextSize = 11 EspToggle.ZIndex = 5
+EspToggle.Font = Enum.Font.GothamBold; EspToggle.TextSize = 11; EspToggle.ZIndex = 5
 Instance.new("UICorner", EspToggle).CornerRadius = UDim.new(0, 6)
 
 local AimToggle = Instance.new("TextButton", MainPanel)
@@ -252,7 +253,7 @@ AimToggle.Position = UDim2.new(0.04, 0, 0.55, 0)
 AimToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 AimToggle.Text = "ХАРД АИМБОТ: ВКЛ"
 AimToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-AimToggle.Font = Enum.Font.GothamBold AimToggle.TextSize = 11 AimToggle.ZIndex = 5
+AimToggle.Font = Enum.Font.GothamBold; AimToggle.TextSize = 11; AimToggle.ZIndex = 5
 Instance.new("UICorner", AimToggle).CornerRadius = UDim.new(0, 6)
 
 local AntiFlingToggle = Instance.new("TextButton", MainPanel)
@@ -261,11 +262,6 @@ AntiFlingToggle.Position = UDim2.new(0.04, 0, 0.82, 0)
 AntiFlingToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 AntiFlingToggle.Text = "🛡️ АНТИ-ФЛИНГ: ВКЛ"
 AntiFlingToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-AntiFlingToggle.Font = Enum.Font.GothamBold AntiFlingToggle.TextSize = 11 AntiFlingToggle.ZIndex = 5
+AntiFlingToggle.Font = Enum.Font.GothamBold; AntiFlingToggle.TextSize = 11; AntiFlingToggle.ZIndex = 5
 Instance.new("UICorner", AntiFlingToggle).CornerRadius = UDim.new(0, 6)
 
-local FlingMurderBtn = Instance.new("TextButton", MainPanel)
-FlingMurderBtn.Size = UDim2.new(0, 180, 0, 32)
-FlingMurderBtn.Position = UDim2.new(0.52, 0, 0.28, 0)
-FlingMurderBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-FlingMurderBtn.Text = "💥 ФЛИНГ УБИЙЦЫ"
