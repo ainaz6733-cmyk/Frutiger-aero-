@@ -1,38 +1,88 @@
--- [[ Твой личный оптимизированный скрипт Frutiger Aero ]] --
-local p = game.Players.LocalPlayer
-local active = true
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
 
-local function applyMesh(tool)
-    -- Жесткий фильтр классического ножа, чтобы он не пропадал
-    if tool:IsA("Tool") and not tool.Name:lower():find("knife") and tool:FindFirstChild("Handle") then
-        local m = tool.Handle:FindFirstChildOfClass("SpecialMesh")
-        if m then
-            if active then
-                -- Меняем ID на космический бластер-винтовку (он точно прогрузится)
-                m.MeshId = "rbxassetid://4400465814"
-                m.TextureId = "rbxassetid://4400465922"
-                m.Scale = Vector3.new(2.3, 2.3, 2.3)
-                tool.Grip = CFrame.new(0, -0.4, -0.8) * CFrame.Angles(0, math.rad(90), 0)
-            else
-                -- Твой рабочий сброс
-                m.MeshId = ""
-                m.TextureId = ""
-                m.Scale = Vector3.new(1, 1, 1)
-                tool.Grip = CFrame.new(0, 0, 0)
+-- ========================================================
+-- 1. НАСТРОЙКА ЦВЕТОВ ESP (Хайлайты без хитбоксов)
+-- ========================================================
+local function getRoleColor(player)
+    -- Проверяем инвентарь или персонажа на наличие оружия
+    local backpack = player:FindFirstChild("Backpack")
+    local character = player.Character
+    
+    if (backpack and backpack:FindFirstChild("Knife")) or (character and character:FindFirstChild("Knife")) then
+        return Color3.fromRGB(255, 0, 0) -- Красный для Убийцы (Murderer)
+    elseif (backpack and backpack:FindFirstChild("Gun")) or (character and character:FindFirstChild("Gun")) then
+        return Color3.fromRGB(0, 0, 255) -- Синий для Шерифа (Sheriff)
+    end
+    return Color3.fromRGB(0, 255, 0) -- Зелёный для Невиновного (Innocent)
+end
+
+-- Функция создания подсветки
+local function createESP(player)
+    if player == LocalPlayer then return end
+    
+    local function applyHighlight(character)
+        -- Удаляем старый ESP, если он остался
+        if character:FindFirstChild("DeltaESP") then
+            character.DeltaESP:Destroy()
+        end
+        
+        -- Создаем современный Highlight (силуэт игрока сквозь стены)
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "DeltaESP"
+        highlight.Parent = character
+        highlight.FillTransparency = 0.6 -- Прозрачность заливки внутри тела
+        highlight.OutlineTransparency = 0 -- Четкий контур снаружи
+        highlight.OutlineColor = getRoleColor(player)
+        highlight.FillColor = getRoleColor(player)
+        
+        -- Постоянно обновляем цвет, если роль изменилась (кто-то подобрал пистолет)
+        task.spawn(function()
+            while character and character:Parent() and highlight and highlight.Parent do
+                local currentColor = getRoleColor(player)
+                highlight.OutlineColor = currentColor
+                highlight.FillColor = currentColor
+                task.wait(1)
+            end
+        end)
+    end
+    
+    if player.Character then applyHighlight(player.Character) end
+    player.CharacterAdded:Connect(applyHighlight)
+end
+
+-- Запуск ESP для всех игроков
+for _, player in ipairs(Players:GetPlayers()) do
+    createESP(player)
+end
+Players.PlayerAdded:Connect(createESP)
+
+-- ========================================================
+-- 2. ФУНКЦИЯ ОТ СЕБЯ: АВТО-СБОР МОНЕТ (Coin Autofarm)
+-- ========================================================
+-- Скрипт будет искать монеты на карте и притягивать их к твоему персонажу
+task.spawn(function()
+    while task.wait(0.5) do
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if hrp then
+            -- В MM2 монеты обычно спавнятся в специальной папке на карте
+            local coinContainer = Workspace:FindFirstChild("Normal") and Workspace.Normal:FindFirstChild("CoinContainer")
+            
+            if coinContainer then
+                for _, coin in ipairs(coinContainer:GetChildren()) do
+                    if coin:IsA("BasePart") or coin:FindFirstChild("TouchInterest") then
+                        -- Вместо жесткого телепорта игрока (за который может кикнуть античит), 
+                        -- мы плавно притягиваем саму монету к хитбоксу игрока
+                        coin.CFrame = hrp.CFrame
+                    end
+                end
             end
         end
     end
-end
-
--- Безопасный цикл: проверяет инвентарь раз в 0.4 секунды (0% лагов в Дельте)
-task.spawn(function()
-    while true do
-        pcall(function()
-            if p.Character then
-                for _, item in pairs(p.Character:GetChildren()) do applyMesh(item) end
-            end
-            for _, item in pairs(p.Backpack:GetChildren()) do applyMesh(item) end
-        end)
-        task.wait(0.4)
-    end
 end)
+
+print("Delta AI Base: MM2 Script Loaded Successfully!")
