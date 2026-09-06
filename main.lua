@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V12 (BUGLESS SCROLL EDITION)
+-- FRUTIGER AERO MM2 HUB V12.2 (ORION UI LIBRARY EDITION)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,9 +6,8 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
-if CoreGui:FindFirstChild("DeltaMM2Hub") then
-	CoreGui.DeltaMM2Hub:Destroy()
-end
+-- Подгружаем профессиональную мобильную библиотеку интерфейса
+local OrionLib = loadstring(game:HttpGet("https://githubusercontent.com"))()
 
 local EspEnabled = true
 local AimbotEnabled = true
@@ -16,7 +15,7 @@ local AntiFlingEnabled = true
 local Highlights = {}
 
 -- ========================================================
--- СИСТЕМА АНТИ-ФЛИНГА
+-- ФУНКЦИОНАЛ ЧИТА (АИМ, ESP, ФЛИНГ, ТП)
 -- ========================================================
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
@@ -33,30 +32,18 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- ========================================================
--- ФУНКЦИИ ТЕЛЕПОРТА
--- ========================================================
 local function teleportToRole(roleName)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
 	if not myHrp then return end
-	
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 			local bp = player:FindFirstChild("Backpack")
 			local pChar = player.Character
 			local isTarget = false
-			
-			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (pChar and pChar:FindFirstChild("Knife"))) then
-				isTarget = true
-			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (pChar and pChar:FindFirstChild("Gun"))) then
-				isTarget = true
-			end
-			
-			if isTarget then
-				myHrp.CFrame = pChar.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
-				return
-			end
+			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (pChar and pChar:FindFirstChild("Knife"))) then isTarget = true
+			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (pChar and pChar:FindFirstChild("Gun"))) then isTarget = true end
+			if isTarget then myHrp.CFrame = pChar.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0) return end
 		end
 	end
 end
@@ -65,39 +52,24 @@ local function teleportToGun()
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
 	local droppedGun = Workspace:FindFirstChild("GunDrop")
-	
-	if myHrp and droppedGun and droppedGun:IsA("BasePart") then
-		myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0)
-	end
+	if myHrp and droppedGun and droppedGun:IsA("BasePart") then myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0) end
 end
 
--- ========================================================
--- СИСТЕМА ФЛИНГА
--- ========================================================
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
 	local tChar = targetPlayer and targetPlayer.Character
 	local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
-	
 	if myHrp and tHrp then
 		local oldCFrame = myHrp.CFrame
 		local oldAntiFling = AntiFlingEnabled
 		AntiFlingEnabled = false
-		
 		local bV = Instance.new("BodyAngularVelocity")
 		bV.MaxTorque = Vector3.new(1, 1, 1) * math.huge
 		bV.AngularVelocity = Vector3.new(0, 99999, 0)
 		bV.Parent = myHrp
-		
-		for i = 1, 25 do
-			if tHrp and myHrp then myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.3) end
-			RunService.Heartbeat:Wait()
-		end
-		
-		bV:Destroy()
-		myHrp.CFrame = oldCFrame
-		AntiFlingEnabled = oldAntiFling
+		for i = 1, 25 do if tHrp and myHrp then myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.3) end RunService.Heartbeat:Wait() end
+		bV:Destroy() myHrp.CFrame = oldCFrame AntiFlingEnabled = oldAntiFling
 	end
 end
 
@@ -106,19 +78,12 @@ local function flingRole(roleName)
 		if player ~= LocalPlayer and player.Character then
 			local bp = player:FindFirstChild("Backpack")
 			local char = player.Character
-			
-			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then
-				flingTarget(player) return
-			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then
-				flingTarget(player) return
-			end
+			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then flingTarget(player) return
+			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then flingTarget(player) return end
 		end
 	end
 end
 
--- ========================================================
--- АИМБОТ И ESP (БАЗА)
--- ========================================================
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
 	local bp = player:FindFirstChild("Backpack")
@@ -146,13 +111,9 @@ local function getBestTarget()
 				local targetPart = player.Character.HumanoidRootPart
 				local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetPart.Position).Magnitude
 				local targetRole = getPlayerRole(player)
-				
 				if localRole == "Sheriff" and targetRole == "Murderer" then return player
 				elseif localRole == "Murderer" and targetRole == "Sheriff" then return player
-				elseif targetRole == "Murderer" and distance < shortestDistance then
-					shortestDistance = distance
-					closestPlayer = player
-				end
+				elseif targetRole == "Murderer" and distance < shortestDistance then shortestDistance = distance closestPlayer = player end
 			end
 		end
 	end
@@ -171,7 +132,6 @@ end)
 local function updatePlayerESP(player)
 	if player == LocalPlayer or not player.Character then return end
 	local char = player.Character
-	
 	local gunInHand = char:FindFirstChild("Gun")
 	if gunInHand and not gunInHand:FindFirstChild("GunGlow") then
 		local glow = Instance.new("BoxHandleAdornment")
@@ -182,7 +142,6 @@ local function updatePlayerESP(player)
 		glow.Adornee = gunInHand:FindFirstChild("Handle") or gunInHand
 		glow.Parent = gunInHand
 	end
-	
 	local hl = char:FindFirstChild("DeltaHighlight")
 	if not hl and EspEnabled then
 		hl = Instance.new("Highlight")
@@ -200,7 +159,6 @@ end
 task.spawn(function()
 	while task.wait(1) do
 		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) end
-		
 		local droppedGun = Workspace:FindFirstChild("GunDrop")
 		if droppedGun and droppedGun:IsA("BasePart") then
 			local gunHl = droppedGun:FindFirstChild("GunHighlight")
@@ -210,13 +168,11 @@ task.spawn(function()
 					gunHl.Name = "GunHighlight"
 					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0)
 					gunHl.Parent = droppedGun
-					
 					local billboard = Instance.new("BillboardGui")
 					billboard.Name = "GunArrow"
 					billboard.Size = UDim2.new(0, 60, 0, 60)
 					billboard.AlwaysOnTop = true
 					billboard.StudsOffset = Vector3.new(0, 3, 0)
-					
 					local text = Instance.new("TextLabel")
 					text.Size = UDim2.new(1, 0, 1, 0)
 					text.Text = "⬇ ПЕСТИК ТУТ! ⬇"
@@ -233,54 +189,76 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ИДЕАЛЬНЫЙ ИНТЕРФЕЙС GUI СО СКРОЛЛОМ (БЕЗ БАГОВ)
+-- СБОРКА ПРОФЕССИОНАЛЬНОГО ИНТЕРФЕЙСА ОРИОН (ORION GUI)
 -- ========================================================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DeltaMM2Hub"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
+-- Создаем главное окно
+local Window = OrionLib:MakeWindow({
+	Name = "FRUTIGER AERO HUB V12.2", 
+	HidePremium = false, 
+	SaveConfig = true, 
+	ConfigFolder = "DeltaFrutiger"
+})
 
--- Главный Фрейм (Основа)
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Name = "MainFrame"
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
-MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 220) -- Удобная фиксированная высота на экране
-MainFrame.Active = true
-MainFrame.Draggable = true
+-- СОЗДАЕМ РАЗДЕЛЫ (ВКЛАДКИ/TABS КАК В VORTEX!)
+local MainTab = Window:MakeTab({Name = "Главная", Icon = "rbxassetid://4483345998"})
+local CombatTab = Window:MakeTab({Name = "Бой (Fling)", Icon = "rbxassetid://4483345998"})
+local TeleportTab = Window:MakeTab({Name = "Телепорты", Icon = "rbxassetid://4483345998"})
 
-local MainCorner = Instance.new("UICorner", MainFrame)
-MainCorner.CornerRadius = UDim.new(0, 14)
+-- --- ВКЛАДКА 1: ГЛАВНАЯ (Переключатели) ---
+MainTab:AddToggle({
+	Name = "ESP Подсветка Ролей",
+	Default = true,
+	Callback = function(Value)
+		EspEnabled = Value
+		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) end
+	end    
+})
 
-local TopLine = Instance.new("Frame", MainFrame)
-TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-TopLine.Size = UDim2.new(1, 0, 0, 5)
+MainTab:AddToggle({
+	Name = "Хард Аимбот (Shift Lock)",
+	Default = true,
+	Callback = function(Value)
+		AimbotEnabled = Value
+	end    
+})
 
--- Шапка (Текст)
-local Title = Instance.new("TextLabel", MainFrame)
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.06, 0, 0.05, 0)
-Title.Size = UDim2.new(0, 180, 0, 25)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V12"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 13
-Title.TextXAlignment = Enum.TextXAlignment.Left
+MainTab:AddToggle({
+	Name = "Защита от флинга (Anti-Fling)",
+	Default = true,
+	Callback = function(Value)
+		AntiFlingEnabled = Value
+	end    
+})
 
--- Рабочий Крестик X (Вынесен отдельно, чтобы кнопки его не перекрывали!)
-local CloseBtn = Instance.new("TextButton", MainFrame)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
-CloseBtn.Position = UDim2.new(0.86, 0, 0.05, 0)
-CloseBtn.Size = UDim2.new(0, 24, 0, 24)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.ZIndex = 10 -- Всегда поверх кнопок
-Instance.new("UICorner", CloseBtn)
+-- --- ВКЛАДКА 2: БОЙ (Кнопки Флинга) ---
+CombatTab:AddButton({
+	Name = "💥 Флинг Убийцы (Уничтожить)",
+	Callback = function()
+		flingRole("Murderer")
+	end
+})
 
--- Синий человечек
-local DeltaIcon = Instance.new("ImageButton", ScreenGui)
-DeltaIcon.Name = "AeroHumanIcon"
-DeltaIcon.Image = "rbxassetid://9824248563" 
-DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+CombatTab:AddButton({
+	Name = "⚡ Флинг Шерифа (Забрать пестик)",
+	Callback = function()
+		flingRole("Sheriff")
+	end
+})
+
+-- --- ВКЛАДКА 3: ТЕЛЕПОРТЫ ---
+TeleportTab:AddButton({
+	Name = "⭐ Телепорт к Пестику на полу",
+	Callback = function()
+		teleportToGun()
+	end
+})
+
+TeleportTab:AddButton({
+	Name = "👣 Телепорт за спину к Убийце",
+	Callback = function()
+		teleportToRole("Murderer")
+	end
+})
+
+-- Запуск библиотеки
+OrionLib:Init()
