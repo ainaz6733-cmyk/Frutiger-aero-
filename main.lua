@@ -1,76 +1,50 @@
+-- FRUTIGER AERO MM2 HUB V3 (MOBILE OPTIMIZED)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
--- Удаляем старые меню, чтобы ничего не накладывалось
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
 
 local EspEnabled = true
 
--- ========================================================
--- ЖЕЛЕЗНОЕ ОПРЕДЕЛЕНИЕ РОЛЕЙ (БЕЗ ЛОЖНЫХ КРАСНЫХ ЦВЕТОВ)
--- ========================================================
-local function getPlayerRole(player)
-	if not player then return "Innocent" end
-	
-	-- 1. Метод: Прямая проверка реального оружия в руках или рюкзаке
-	local char = player.Character
+-- Логика ролей
+local function getRoleColor(player)
+	if not player or not player.Character then return Color3.fromRGB(0, 255, 100) end
 	local bp = player:FindFirstChild("Backpack")
+	local char = player.Character
 	
-	if bp and bp:FindFirstChild("Knife") then return "Murderer" end
-	if char and char:FindFirstChild("Knife") and char.Knife:IsA("Tool") then return "Murderer" end
+	if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
+		return Color3.fromRGB(255, 0, 50) -- Красный
+	elseif (bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun")) then
+		return Color3.fromRGB(0, 100, 255) -- Синий
+	end
 	
-	if bp and bp:FindFirstChild("Gun") then return "Sheriff" end
-	if char and char:FindFirstChild("Gun") and char.Gun:IsA("Tool") then return "Sheriff" end
-	
-	-- 2. Метод: Проверка через оригинальную папку раунда MM2
 	local normalFolder = Workspace:FindFirstChild("Normal")
 	if normalFolder then
 		local knifeModel = normalFolder:FindFirstChild("Knife")
 		local gunModel = normalFolder:FindFirstChild("Gun")
-		
-		if knifeModel and knifeModel:FindFirstChild("Player") and knifeModel.Player.Value == player.Name then 
-			return "Murderer" 
-		end
-		if gunModel and gunModel:FindFirstChild("Player") and gunModel.Player.Value == player.Name then 
-			return "Sheriff" 
-		end
+		if knifeModel and knifeModel:FindFirstChild("Player") and knifeModel.Player.Value == player.Name then return Color3.fromRGB(255, 0, 50) end
+		if gunModel and gunModel:FindFirstChild("Player") and gunModel.Player.Value == player.Name then return Color3.fromRGB(0, 100, 255) end
 	end
-	
-	return "Innocent"
+	return Color3.fromRGB(0, 255, 100) -- Зелёный
 end
 
-local function getRoleColor(player)
-	local role = getPlayerRole(player)
-	if role == "Murderer" then 
-		return Color3.fromRGB(255, 0, 0) -- Насыщенный красный
-	elseif role == "Sheriff" then 
-		return Color3.fromRGB(0, 100, 255) -- Синий
-	end
-	return Color3.fromRGB(0, 255, 100) -- Чистый зелёный для мирных
-end
-
--- ========================================================
--- ОБНОВЛЁННАЯ СИСТЕМА ESP И ПОДСВЕТКА ПИСТОЛЕТА
--- ========================================================
+-- Система ESP
 local function applyESP(player)
 	if player == LocalPlayer then return end
-	
 	local function setupHighlight(character)
 		task.wait(0.5)
-		if character:FindFirstChild("DeltaHighlight") then 
-			character.DeltaHighlight:Destroy() 
-		end
+		if character:FindFirstChild("DeltaHighlight") then character.DeltaHighlight:Destroy() end
 		
 		local hl = Instance.new("Highlight")
 		hl.Name = "DeltaHighlight"
-		hl.Parent = character
 		hl.OutlineTransparency = 0
 		hl.FillTransparency = 0.6
+		hl.Parent = character
 		
 		local conn
 		conn = RunService.RenderStepped:Connect(function()
@@ -78,18 +52,16 @@ local function applyESP(player)
 				if conn then conn:Disconnect() end
 				return
 			end
-			
 			if EspEnabled then
 				hl.Enabled = true
-				local c = getRoleColor(player)
-				hl.OutlineColor = c
-				hl.FillColor = c
+				local color = getRoleColor(player)
+				hl.OutlineColor = color
+				hl.FillColor = color
 			else
 				hl.Enabled = false
 			end
 		end)
 	end
-	
 	if player.Character then setupHighlight(player.Character) end
 	player.CharacterAdded:Connect(setupHighlight)
 end
@@ -97,7 +69,7 @@ end
 for _, p in ipairs(Players:GetPlayers()) do applyESP(p) end
 Players.PlayerAdded:Connect(applyESP)
 
--- Подсветка упавшего пестика
+-- Подсветка упавшего пистолета
 task.spawn(function()
 	while task.wait(1) do
 		if EspEnabled then
@@ -106,11 +78,11 @@ task.spawn(function()
 				if not droppedGun:FindFirstChild("GunHighlight") then
 					local gunHl = Instance.new("Highlight")
 					gunHl.Name = "GunHighlight"
-					gunHl.Parent = droppedGun
-					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0) -- Золотой
+					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0)
 					gunHl.FillColor = Color3.fromRGB(255, 215, 0)
 					gunHl.FillTransparency = 0.3
 					gunHl.OutlineTransparency = 0
+					gunHl.Parent = droppedGun
 				end
 			end
 		end
@@ -118,7 +90,7 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ИСПРАВЛЕННЫЙ GUI (ТЕКСТ И КНОПКИ РАБОТАЮТ)
+-- ГЛЯНЦЕВЫЙ FRUTIGER AERO ИНТЕРФЕЙС GUI
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
@@ -127,90 +99,130 @@ ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.Position = UDim2.new(0.35, 0, 0.35, 0)
 MainFrame.Size = UDim2.new(0, 300, 0, 140)
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true -- Скрывает лишнее по краям
+MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 14)
 MainCorner.Parent = MainFrame
 
+-- ФОНОВАЯ КАРТИНКА (Frutiger Aero Текстура)
+local BackgroundImage = Instance.new("ImageLabel")
+BackgroundImage.Name = "AeroBackground"
+BackgroundImage.Image = "rbxassetid://12558661621" -- Оригинальная Frutiger Aero текстура неба и травы
+BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+BackgroundImage.ImageTransparency = 0.3 -- Плавное наложение на тёмный фон
+BackgroundImage.ScaleType = Enum.ScaleType.Crop
+BackgroundImage.ZIndex = 0 -- Задний план
+BackgroundImage.Parent = MainFrame
+
+local BgCorner = Instance.new("UICorner")
+BgCorner.CornerRadius = UDim.new(0, 14)
+BgCorner.Parent = BackgroundImage
+
+-- Стеклянная неоновая полоска сверху
 local TopLine = Instance.new("Frame")
+TopLine.BackgroundColor3 = Color3.fromRGB(0, 220, 255) -- Лазурный эко-цвет
+TopLine.Size = UDim2.new(1, 0, 0, 5)
+TopLine.ZIndex = 1
 TopLine.Parent = MainFrame
-TopLine.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-TopLine.Size = UDim2.new(1, 0, 0, 4)
 
 local TopLineCorner = Instance.new("UICorner")
-TopLineCorner.CornerRadius = UDim.new(0, 12)
+TopLineCorner.CornerRadius = UDim.new(0, 14)
 TopLineCorner.Parent = TopLine
 
+-- Заголовок
 local Title = Instance.new("TextLabel")
-Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0.06, 0, 0.1, 0)
-Title.Size = UDim2.new(0, 180, 0, 25)
+Title.Position = UDim2.new(0.06, 0, 0.12, 0)
+Title.Size = UDim2.new(0, 200, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "DELTA ESP BASE V3"
-Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.Text = "FRUTIGER AERO HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 2
+Title.Parent = MainFrame
 
+-- Тень под текстом для читаемости на фоне травы
+local TitleShadow = Instance.new("TextLabel")
+TitleShadow.BackgroundTransparency = 1
+TitleShadow.Position = UDim2.new(0.06, 1, 0.12, 1)
+TitleShadow.Size = UDim2.new(0, 200, 0, 25)
+TitleShadow.Font = Enum.Font.GothamBold
+TitleShadow.Text = "FRUTIGER AERO HUB"
+TitleShadow.TextColor3 = Color3.fromRGB(0, 0, 0)
+TitleShadow.TextSize = 14
+TitleShadow.TextTransparency = 0.5
+TitleShadow.TextXAlignment = Enum.TextXAlignment.Left
+TitleShadow.ZIndex = 1
+TitleShadow.Parent = MainFrame
+
+-- Кнопка Х (Сворачивание)
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = MainFrame
-CloseBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-CloseBtn.Position = UDim2.new(0.85, 0, 0.1, 0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundTransparency = 0.8 -- Эффект стекла
+CloseBtn.Position = UDim2.new(0.85, 0, 0.12, 0)
 CloseBtn.Size = UDim2.new(0, 26, 0, 26)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
 CloseBtn.TextSize = 12
+CloseBtn.ZIndex = 2
+CloseBtn.Parent = MainFrame
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.CornerRadius = UDim.new(1, 0)
 CloseCorner.Parent = CloseBtn
 
+-- Круглая иконка Delta
 local DeltaIcon = Instance.new("TextButton")
 DeltaIcon.Name = "DeltaIcon"
-DeltaIcon.Parent = ScreenGui
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
 DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
 DeltaIcon.Size = UDim2.new(0, 45, 0, 45)
 DeltaIcon.Font = Enum.Font.GothamBold
 DeltaIcon.Text = "Δ"
-DeltaIcon.TextColor3 = Color3.fromRGB(0, 255, 150)
+DeltaIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
 DeltaIcon.TextSize = 22
 DeltaIcon.Visible = false
+DeltaIcon.Parent = ScreenGui
 
 local IconCorner = Instance.new("UICorner")
 IconCorner.CornerRadius = UDim.new(1, 0)
 IconCorner.Parent = DeltaIcon
 
+-- Кнопка переключения ESP (Аэро-голубая)
 local EspToggle = Instance.new("TextButton")
-EspToggle.Parent = MainFrame
-EspToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-EspToggle.Position = UDim2.new(0.06, 0, 0.45, 0)
+EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- Лазурный глянцевый
+EspToggle.Position = UDim2.new(0.06, 0, 0.48, 0)
 EspToggle.Size = UDim2.new(0, 264, 0, 40)
 EspToggle.Font = Enum.Font.GothamBold
 EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
 EspToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 EspToggle.TextSize = 12
+EspToggle.ZIndex = 2
+EspToggle.Parent = MainFrame
 
 local EspCorner = Instance.new("UICorner")
 EspCorner.CornerRadius = UDim.new(0, 8)
 EspCorner.Parent = EspToggle
 
--- Исправленная логика кликов и изменения текста кнопок
+-- Логика кнопок
 EspToggle.MouseButton1Click:Connect(function()
 	EspEnabled = not EspEnabled
 	if EspEnabled then
 		EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
-		EspToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+		EspToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 	else
 		EspToggle.Text = "ESP ПОДСВЕТКА: ВЫКЛ"
-		EspToggle.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+		EspToggle.BackgroundColor3 = Color3.fromRGB(80, 90, 100)
 	end
 end)
 
@@ -223,5 +235,3 @@ DeltaIcon.MouseButton1Click:Connect(function()
 	DeltaIcon.Visible = false
 	MainFrame.Visible = true
 end)
-
-print("Delta Hub V3: Полное исправление интерфейса и ролей загружено!")
