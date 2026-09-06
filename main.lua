@@ -4,7 +4,6 @@ local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
--- Очистка старых меню
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -12,31 +11,24 @@ end
 local EspEnabled = true
 
 -- ========================================================
--- 1. НАДЁЖНЫЙ СКАНЕР РОЛЕЙ (ПО НАЛИЧИЮ ОРУЖИЯ В ХИТБОКСЕ)
+-- VORTEX HUB ROLE DETECTOR
 -- ========================================================
 local function getPlayerRole(player)
 	if not player then return "Innocent" end
+	
+	-- Check if player holds the weapon
 	local char = player.Character
 	local bp = player:FindFirstChild("Backpack")
+	if (char and char:FindFirstChild("Knife")) or (bp and bp:FindFirstChild("Knife")) then return "Murderer" end
+	if (char and char:FindFirstChild("Gun")) or (bp and bp:FindFirstChild("Gun")) then return "Sheriff" end
 	
-	-- Проверяем Убийцу (в руках или в рюкзаке)
-	if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
-		return "Murderer"
-	end
-	
-	-- Проверяем Шерифа (в руках или в рюкзаке)
-	if (bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun")) then
-		return "Sheriff"
-	end
-	
-	-- Ищем оружие на самом теле персонажа (когда оно убрано в кобуру/за спину)
-	if char then
-		for _, item in ipairs(char:GetChildren()) do
-			if item:IsA("Tool") then
-				if item.Name == "Knife" then return "Murderer" end
-				if item.Name == "Gun" then return "Sheriff" end
-			end
-		end
+	-- Check game workspace like Vortex Hub does
+	local normalFolder = Workspace:FindFirstChild("Normal")
+	if normalFolder then
+		local knifeModel = normalFolder:FindFirstChild("Knife")
+		local gunModel = normalFolder:FindFirstChild("Gun")
+		if knifeModel and knifeModel:FindFirstChild("Player") and knifeModel.Player.Value == player.Name then return "Murderer" end
+		if gunModel and gunModel:FindFirstChild("Player") and gunModel.Player.Value == player.Name then return "Sheriff" end
 	end
 	
 	return "Innocent"
@@ -44,25 +36,20 @@ end
 
 local function getRoleColor(player)
 	local role = getPlayerRole(player)
-	if role == "Murderer" then
-		return Color3.fromRGB(255, 0, 50) -- Красный для Убийцы
-	elseif role == "Sheriff" then
-		return Color3.fromRGB(0, 100, 255) -- Синий для Шерифа
-	end
-	return Color3.fromRGB(0, 255, 100) -- Зелёный для Мирных
+	if role == "Murderer" then return Color3.fromRGB(255, 0, 50) end -- Red
+	if role == "Sheriff" then return Color3.fromRGB(0, 100, 255) end -- Blue
+	return Color3.fromRGB(0, 255, 100) -- Green
 end
 
 -- ========================================================
--- 2. ОБНОВЛЕННАЯ СИСТЕМА ESP И ДЕТЕКТОР УПАВШЕГО ПИСТОЛЕТА
+-- ACCURATE HIGHLIGHT ESP & DROPPED GUN ESP
 -- ========================================================
 local function applyESP(player)
 	if player == LocalPlayer then return end
 	
 	local function setupHighlight(character)
 		task.wait(0.5)
-		if character:FindFirstChild("DeltaHighlight") then
-			character.DeltaHighlight:Destroy()
-		end
+		if character:FindFirstChild("DeltaHighlight") then character.DeltaHighlight:Destroy() end
 		
 		local hl = Instance.new("Highlight")
 		hl.Name = "DeltaHighlight"
@@ -93,18 +80,17 @@ end
 for _, p in ipairs(Players:GetPlayers()) do applyESP(p) end
 Players.PlayerAdded:Connect(applyESP)
 
--- ПОДСФЕТКА УПАВШЕГО ПИСТОЛЕТА (GUN ESP)
+-- DROPPED GUN DETECTOR
 task.spawn(function()
 	while task.wait(1) do
 		if EspEnabled then
-			-- Ищем пистолет на полу карты (в MM2 он обычно падает прямо в Workspace)
 			local droppedGun = Workspace:FindFirstChild("GunDrop")
 			if droppedGun and droppedGun:IsA("BasePart") then
 				if not droppedGun:FindFirstChild("GunHighlight") then
 					local gunHl = Instance.new("Highlight")
 					gunHl.Name = "GunHighlight"
 					gunHl.Parent = droppedGun
-					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0) -- Яркий золотой/жёлтый цвет
+					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0) -- Yellow
 					gunHl.FillColor = Color3.fromRGB(255, 215, 0)
 					gunHl.FillTransparency = 0.3
 					gunHl.OutlineTransparency = 0
@@ -115,7 +101,7 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- 3. ИНТЕРФЕЙС GUI
+-- MODERN DELTA GUI
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
@@ -191,7 +177,7 @@ EspToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
 EspToggle.Position = UDim2.new(0.06, 0, 0.45, 0)
 EspToggle.Size = UDim2.new(0, 264, 0, 40)
 EspToggle.Font = Enum.Font.GothamBold
-EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
+EspToggle.Text = "ESP HIGHLIGHT: ON"
 EspToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 EspToggle.TextSize = 12
 
@@ -202,10 +188,10 @@ EspCorner.Parent = EspToggle
 EspToggle.MouseButton1Click:Connect(function()
 	EspEnabled = not EspEnabled
 	if EspEnabled then
-		EspToggle.Text = "ESP ПОДСВЕТКА: ВКЛ"
+		EspToggle.Text = "ESP HIGHLIGHT: ON"
 		EspToggle.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
 	else
-		EspToggle.Text = "ESP ПОДСВЕТКА: ВЫКЛ"
+		EspToggle.Text = "ESP HIGHLIGHT: OFF"
 		EspToggle.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	end
 end)
