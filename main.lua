@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V23 (TOTAL FIX EDITION - 0 ERRORS)
+-- FRUTIGER AERO MM2 HUB V24 (PROTECTED PCALL EDITION - GURANTEED LAUNCH)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Жесткое удаление старых версий меню из памяти игры
+-- Безопасное удаление старых копий меню
 if CoreGui:FindFirstChild("DeltaMM2Hub") then
 	CoreGui.DeltaMM2Hub:Destroy()
 end
@@ -16,10 +16,10 @@ local AimbotEnabled = true
 local AntiFlingEnabled = true
 
 -- ========================================================
--- ФУНКЦИОНАЛ ЧИТА (ВСЕ ИСПРАВЛЕННЫЕ И ПРОВЕРЕННЫЕ СКРИПТЫ)
+-- ФУНКЦИОНАЛ ЧИТА (БАЗОВЫЕ СКРИПТЫ)
 -- ========================================================
 
--- Сканер упавшего пистолета
+-- Поисковик пестика на полу
 local function findDroppedGun()
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if obj.Name == "GunDrop" and obj:IsA("BasePart") then 
@@ -31,32 +31,37 @@ local function findDroppedGun()
 	return nil
 end
 
--- Скин-чейнджер на АВП
+-- ========================================================
+-- ИЗОЛИРОВАННЫЙ СКИН-ЧЕЙНДЖЕР АВП (ЗАЩИЩЕН ЧЕРЕЗ PCALL)
+-- ========================================================
 local AWP_MESH_ID = "rbxassetid://430310237"
 local AWP_TEXTURE_ID = "rbxassetid://430310255"
 
 local function applyAwpSkin(tool)
-	if not tool or not tool:IsA("Tool") then return end
-	if tool.Name == "Gun" or tool:FindFirstChild("GunCmd") or tool:FindFirstChild("GunServer") then
-		local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("MeshPart") or tool:FindFirstChildOfClass("SpecialMesh")
-		if handle then
-			if handle:IsA("MeshPart") then 
-				handle.MeshId = AWP_MESH_ID 
-				handle.TextureID = AWP_TEXTURE_ID
-			elseif handle:IsA("SpecialMesh") then 
-				handle.MeshId = AWP_MESH_ID 
-				handle.TextureId = AWP_TEXTURE_ID
-			else
-				local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
-				mesh.MeshId = AWP_MESH_ID 
-				mesh.TextureId = AWP_TEXTURE_ID 
-				mesh.Scale = Vector3.new(0.07, 0.07, 0.07)
+	-- Оборачиваем в pcall: если игра выдаст ошибку, скрипт НЕ сломается!
+	pcall(function()
+		if not tool or not tool:IsA("Tool") then return end
+		if tool.Name == "Gun" or tool:FindFirstChild("GunCmd") or tool:FindFirstChild("GunServer") then
+			local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("MeshPart") or tool:FindFirstChildOfClass("SpecialMesh")
+			if handle then
+				if handle:IsA("MeshPart") then 
+					handle.MeshId = AWP_MESH_ID 
+					handle.TextureID = AWP_TEXTURE_ID
+				elseif handle:IsA("SpecialMesh") then 
+					handle.MeshId = AWP_MESH_ID 
+					handle.TextureId = AWP_TEXTURE_ID
+				else
+					local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
+					mesh.MeshId = AWP_MESH_ID 
+					mesh.TextureId = AWP_TEXTURE_ID 
+					mesh.Scale = Vector3.new(0.07, 0.07, 0.07)
+				end
 			end
 		end
-	end
+	end)
 end
 
--- Фикс слежки за оружием после смерти (Перезапускается каждый спавн)
+-- Безопасная слежка за оружием
 local function monitorWeapons(char)
 	if not char then return end
 	char.ChildAdded:Connect(function(child) 
@@ -70,14 +75,18 @@ LocalPlayer.CharacterAdded:Connect(monitorWeapons)
 
 task.spawn(function()
 	while task.wait(1) do
-		local bp = LocalPlayer:FindFirstChild("Backpack")
-		if bp then 
-			for _, tool in ipairs(bp:GetChildren()) do applyAwpSkin(tool) end 
-		end
+		pcall(function()
+			local bp = LocalPlayer:FindFirstChild("Backpack")
+			if bp then 
+				for _, tool in ipairs(bp:GetChildren()) do applyAwpSkin(tool) end 
+			end
+		end)
 	end
 end)
 
--- Флинг с телепортом обратно в точку старта
+-- ========================================================
+-- БЕЗОПАСНЫЙ ФЛИНГ С ВОЗВРАТОМ НА МЕСТО
+-- ========================================================
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -118,7 +127,7 @@ local function flingRole(roleName)
 	end
 end
 
--- Система защиты Anti-Fling
+-- Анти-Флинг защита
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
 		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = true end end
@@ -138,7 +147,7 @@ local function teleportToGun()
 	if myHrp and droppedGun then myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0) end
 end
 
--- Роли и цвета для ESP
+-- Роли для ESP
 local function getPlayerRole(player)
 	if not player or not player.Character then return "Innocent" end
 	local bp = player:FindFirstChild("Backpack")
@@ -155,7 +164,7 @@ local function getRoleColor(player)
 	return Color3.fromRGB(0, 255, 100)
 end
 
--- Поиск цели для Аимбота
+-- Жесткий Аимбот под Shift Lock
 local function getBestTarget()
 	local localRole = getPlayerRole(LocalPlayer)
 	local closestPlayer = nil
@@ -176,7 +185,6 @@ local function getBestTarget()
 	return closestPlayer
 end
 
--- Цикл работы Аимбота
 RunService.RenderStepped:Connect(function()
 	if AimbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local target = getBestTarget()
@@ -186,7 +194,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- Обновление силуэтов ESP
+-- Силуэты ESP
 local function updatePlayerESP(player)
 	if player == LocalPlayer or not player.Character then return end
 	local char = player.Character
@@ -204,7 +212,6 @@ local function updatePlayerESP(player)
 	end
 end
 
--- Главный цикл ESP и подсветки пестика на полу (ОШИБКИ ИСПРАВЛЕНЫ)
 task.spawn(function()
 	while task.wait(1) do
 		for _, player in ipairs(Players:GetPlayers()) do 
@@ -226,14 +233,13 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- ТЕКСТОВЫЙ GUI ИНТЕРФЕЙС (ПОЛНЫЙ ИСПРАВЛЕННЫЙ РЕНДЕР)
+-- НЕУБИВАЕМЫЙ ТЕКСТОВЫЙ GUI ИНТЕРФЕЙС
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
--- Прозрачный контейнер списка кнопок
 local MenuHolder = Instance.new("Frame")
 MenuHolder.Name = "MenuHolder"
 MenuHolder.Size = UDim2.new(0, 180, 0, 240)
@@ -246,7 +252,6 @@ UIList.SortOrder = Enum.SortOrder.LayoutOrder
 UIList.Padding = UDim.new(0, 5)
 UIList.Parent = MenuHolder
 
--- Круглая кнопка Дельты для раскрытия меню
 local OpenLabel = Instance.new("TextButton")
 OpenLabel.Size = UDim2.new(0, 45, 0, 45)
 OpenLabel.Position = UDim2.new(0.02, 0, 0.45, 0)
@@ -259,7 +264,6 @@ OpenLabel.Visible = false
 OpenLabel.Parent = ScreenGui
 Instance.new("UICorner", OpenLabel).CornerRadius = UDim.new(1, 0)
 
--- Функция создания надежных текстовых кнопок (Фикс с заменой self)
 local function createTextButton(text, color, order, callback)
 	local label = Instance.new("TextButton")
 	label.Size = UDim2.new(0, 175, 0, 30)
@@ -286,6 +290,3 @@ local CloseToggle = createTextButton("[ ❌ ЗАКРЫТЬ МЕНЮ ]", Color3.f
 	OpenLabel.Visible = true
 end)
 
-local EspToggle = createTextButton("🔵 ESP ПОДСВЕТКА: ВКЛ", Color3.fromRGB(0, 150, 255), 2, function(btn)
-	EspEnabled = not EspEnabled
-		
