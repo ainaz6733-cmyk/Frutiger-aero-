@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V13 (KAVO UI EDITION - 100% FIXED)
+-- FRUTIGER AERO MM2 HUB V13.1 (KAVO UI - TOTALLY FIXED)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -200,7 +200,6 @@ function KavoLibrary:CreateMenu()
 	local Main = Instance.new("Frame", KavoGui)
 	Main.Size = UDim2.new(0, 340, 0, 220)
 	Main.Position = UDim2.new(0.3, 0, 0.25, 0)
-	MainFrame = Main
 	Main.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
 	Main.Active = true Main.Draggable = true
 	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
@@ -214,10 +213,10 @@ function KavoLibrary:CreateMenu()
 	Line.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 	
 	local Title = Instance.new("TextLabel", Top)
-	Title.Text = "  FRUTIGER AERO HUB V13"
+	Title.Text = "  FRUTIGER AERO HUB V13.1"
 	Title.Size = UDim2.new(0.7, 0, 1, 0)
 	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Title.Font = Enum.Font.GothamBold Title.TextSize = 13 Title.TextXAlignment = Enum.TextXAlignment.Left Title.BackgroundTransparency = 1
+	Title.Font = Enum.Font.GothamBold Title.TextSize = 12 Title.TextXAlignment = Enum.TextXAlignment.Left Title.BackgroundTransparency = 1
 	
 	local Close = Instance.new("TextButton", Top)
 	Close.Text = "X" Close.Size = UDim2.new(0, 24, 0, 24) Close.Position = UDim2.new(0.9, 0, 0.1, 0)
