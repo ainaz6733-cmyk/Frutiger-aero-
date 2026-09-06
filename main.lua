@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V24 (PROTECTED PCALL EDITION - GURANTEED LAUNCH)
+-- FRUTIGER AERO MM2 HUB V25 (MANUAL POSITIONING & TOGGLE FIX)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -16,7 +16,7 @@ local AimbotEnabled = true
 local AntiFlingEnabled = true
 
 -- ========================================================
--- ФУНКЦИОНАЛ ЧИТА (БАЗОВЫЕ СКРИПТЫ)
+-- ФУНКЦИОНАЛ ЧИТА (БЕЗОПАСНЫЙ РАБОЧИЙ КОД)
 -- ========================================================
 
 -- Поисковик пестика на полу
@@ -31,14 +31,11 @@ local function findDroppedGun()
 	return nil
 end
 
--- ========================================================
--- ИЗОЛИРОВАННЫЙ СКИН-ЧЕЙНДЖЕР АВП (ЗАЩИЩЕН ЧЕРЕЗ PCALL)
--- ========================================================
+-- Скин-чейнджер на АВП
 local AWP_MESH_ID = "rbxassetid://430310237"
 local AWP_TEXTURE_ID = "rbxassetid://430310255"
 
 local function applyAwpSkin(tool)
-	-- Оборачиваем в pcall: если игра выдаст ошибку, скрипт НЕ сломается!
 	pcall(function()
 		if not tool or not tool:IsA("Tool") then return end
 		if tool.Name == "Gun" or tool:FindFirstChild("GunCmd") or tool:FindFirstChild("GunServer") then
@@ -61,7 +58,6 @@ local function applyAwpSkin(tool)
 	end)
 end
 
--- Безопасная слежка за оружием
 local function monitorWeapons(char)
 	if not char then return end
 	char.ChildAdded:Connect(function(child) 
@@ -84,9 +80,7 @@ task.spawn(function()
 	end
 end)
 
--- ========================================================
--- БЕЗОПАСНЫЙ ФЛИНГ С ВОЗВРАТОМ НА МЕСТО
--- ========================================================
+-- Флинг с телепортом обратно в точку старта
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -164,7 +158,7 @@ local function getRoleColor(player)
 	return Color3.fromRGB(0, 255, 100)
 end
 
--- Жесткий Аимбот под Shift Lock
+-- Поиск цели для Аимбота
 local function getBestTarget()
 	local localRole = getPlayerRole(LocalPlayer)
 	local closestPlayer = nil
@@ -185,6 +179,7 @@ local function getBestTarget()
 	return closestPlayer
 end
 
+-- Цикл работы Аимбота
 RunService.RenderStepped:Connect(function()
 	if AimbotEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local target = getBestTarget()
@@ -233,25 +228,22 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- НЕУБИВАЕМЫЙ ТЕКСТОВЫЙ GUI ИНТЕРФЕЙС
+-- ЖЕСТКО НАСТРОЕННЫЙ ТЕКСТОВЫЙ GUI ИНТЕРФЕЙС
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
+-- Главный контейнер для кнопок (Жесткая высота под 7 кнопок)
 local MenuHolder = Instance.new("Frame")
 MenuHolder.Name = "MenuHolder"
-MenuHolder.Size = UDim2.new(0, 180, 0, 240)
+MenuHolder.Size = UDim2.new(0, 180, 0, 250)
 MenuHolder.Position = UDim2.new(0.02, 0, 0.15, 0)
 MenuHolder.BackgroundTransparency = 1
 MenuHolder.Parent = ScreenGui
 
-local UIList = Instance.new("UIListLayout")
-UIList.SortOrder = Enum.SortOrder.LayoutOrder
-UIList.Padding = UDim.new(0, 5)
-UIList.Parent = MenuHolder
-
+-- Синий глянцевый человечек для раскрытия меню
 local OpenLabel = Instance.new("TextButton")
 OpenLabel.Size = UDim2.new(0, 45, 0, 45)
 OpenLabel.Position = UDim2.new(0.02, 0, 0.45, 0)
@@ -264,16 +256,17 @@ OpenLabel.Visible = false
 OpenLabel.Parent = ScreenGui
 Instance.new("UICorner", OpenLabel).CornerRadius = UDim.new(1, 0)
 
-local function createTextButton(text, color, order, callback)
+-- Функция создания кнопок с РУЧНЫМ указанием позиции (Исключает баги невидимости)
+local function createTextButton(text, color, pos, callback)
 	local label = Instance.new("TextButton")
 	label.Size = UDim2.new(0, 175, 0, 30)
+	label.Position = pos -- Жесткая координата
 	label.BackgroundColor3 = color
 	label.BackgroundTransparency = 0.2
 	label.Text = text
 	label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	label.Font = Enum.Font.GothamBold
 	label.TextSize = 10
-	label.LayoutOrder = order
 	label.Parent = MenuHolder
 	
 	Instance.new("UICorner", label).CornerRadius = UDim.new(0, 6)
@@ -284,9 +277,13 @@ local function createTextButton(text, color, order, callback)
 	return label
 end
 
--- Сборка кнопок
-local CloseToggle = createTextButton("[ ❌ ЗАКРЫТЬ МЕНЮ ]", Color3.fromRGB(255, 50, 50), 1, function()
+-- Сборка кнопок (Каждая кнопка стоит СТРОГО на своем месте по высоте Y)
+local CloseToggle = createTextButton("[ ❌ ЗАКРЫТЬ МЕНЮ ]", Color3.fromRGB(255, 50, 50), UDim2.new(0, 0, 0, 0), function()
 	MenuHolder.Visible = false
 	OpenLabel.Visible = true
 end)
 
+local EspToggle = createTextButton("🔵 ESP ПОДСВЕТКА: ВКЛ", Color3.fromRGB(0, 150, 255), UDim2.new(0, 0, 0, 35), function(btn)
+	EspEnabled = not EspEnabled
+	btn.Text = EspEnabled and "🔵 ESP ПОДСВЕТКА: ВКЛ" or "⚪ ESP ПОДСВЕТКА: ВЫКЛ"
+		
