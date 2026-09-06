@@ -1,4 +1,4 @@
--- FRUTIGER AERO MM2 HUB V17.1 (FIXED SYNTAX)
+-- FRUTIGER AERO MM2 HUB V19.1 (BLISS XP BACKGROUND)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
@@ -16,35 +16,40 @@ local AntiFlingEnabled = true
 local Highlights = {}
 
 -- ========================================================
--- СКИН-ЧЕЙНДЖЕР: ТРАНСФОРМАЦИЯ ПЕСТИКА В АВП (AWP SNIPER)
+-- ФУНКЦИОНАЛ (ТП, ФЛИНГ С ВОЗВРАТОМ, АИМ, ESP)
 -- ========================================================
+local function findDroppedGun()
+	return Workspace:FindFirstChild("GunDrop", true)
+end
+
 local AWP_MESH_ID = "rbxassetid://430310237"
 local AWP_TEXTURE_ID = "rbxassetid://430310255"
 
-local function applyAwpSkin(gun)
-	local handle = gun:FindFirstChild("Handle") or gun:FindFirstChildOfClass("MeshPart") or gun:FindFirstChildOfClass("SpecialMesh")
-	if handle then
-		if handle:IsA("MeshPart") then
-			handle.MeshId = AWP_MESH_ID
-			handle.TextureID = AWP_TEXTURE_ID
-		elseif handle:IsA("SpecialMesh") then
-			handle.MeshId = AWP_MESH_ID
-			handle.TextureId = AWP_TEXTURE_ID
-		else
-			local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
-			mesh.MeshId = AWP_MESH_ID
-			mesh.TextureId = AWP_TEXTURE_ID
-			mesh.Scale = Vector3.new(0.08, 0.08, 0.08)
+local function applyAwpSkin(tool)
+	if not tool:IsA("Tool") then return end
+	if tool.Name == "Gun" or tool:FindFirstChild("GunCmd") or tool:FindFirstChild("GunServer") then
+		local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("MeshPart") or tool:FindFirstChildOfClass("SpecialMesh")
+		if handle then
+			if handle:IsA("MeshPart") then
+				handle.MeshId = AWP_MESH_ID
+				handle.TextureID = AWP_TEXTURE_ID
+			elseif handle:IsA("SpecialMesh") then
+				handle.MeshId = AWP_MESH_ID
+				handle.TextureId = AWP_TEXTURE_ID
+			else
+				local mesh = handle:FindFirstChildOfClass("SpecialMesh") or Instance.new("SpecialMesh", handle)
+				mesh.MeshId = AWP_MESH_ID
+				mesh.TextureId = AWP_TEXTURE_ID
+				mesh.Scale = Vector3.new(0.08, 0.08, 0.08)
+			end
 		end
 	end
 end
 
 local function monitorWeapons(char)
 	char.ChildAdded:Connect(function(child)
-		if child:IsA("Tool") and child.Name == "Gun" then
-			task.wait(0.1)
-			applyAwpSkin(child)
-		end
+		task.wait(0.2)
+		applyAwpSkin(child)
 	end)
 end
 
@@ -54,15 +59,12 @@ LocalPlayer.CharacterAdded:Connect(monitorWeapons)
 task.spawn(function()
 	while task.wait(1) do
 		local bp = LocalPlayer:FindFirstChild("Backpack")
-		if bp and bp:FindFirstChild("Gun") then
-			applyAwpSkin(bp.Gun)
+		if bp then
+			for _, tool in ipairs(bp:GetChildren()) do applyAwpSkin(tool) end
 		end
 	end
 end)
 
--- ========================================================
--- ИСПРАВЛЕННЫЙ ФЛИНГ
--- ========================================================
 local function flingTarget(targetPlayer)
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -70,6 +72,7 @@ local function flingTarget(targetPlayer)
 	local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
 	
 	if myHrp and tHrp then
+		local oldCFrame = myHrp.CFrame
 		local oldAntiFling = AntiFlingEnabled
 		AntiFlingEnabled = false
 		
@@ -78,14 +81,14 @@ local function flingTarget(targetPlayer)
 		bV.AngularVelocity = Vector3.new(0, 99999, 0)
 		bV.Parent = myHrp
 		
-		for i = 1, 20 do
-			if tHrp and myHrp then 
-				myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.2) 
-			end
+		for i = 1, 15 do
+			if tHrp and myHrp then myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.1) end
 			RunService.Heartbeat:Wait()
 		end
 		
 		bV:Destroy()
+		task.wait(0.1)
+		myHrp.CFrame = oldCFrame
 		AntiFlingEnabled = oldAntiFling
 	end
 end
@@ -95,40 +98,27 @@ local function flingRole(roleName)
 		if player ~= LocalPlayer and player.Character then
 			local bp = player:FindFirstChild("Backpack")
 			local char = player.Character
-			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then 
-				flingTarget(player) return
-			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then 
-				flingTarget(player) return 
-			end
+			if roleName == "Murderer" and ((bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife"))) then flingTarget(player) return
+			elseif roleName == "Sheriff" and ((bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun"))) then flingTarget(player) return end
 		end
 	end
 end
 
--- ========================================================
--- АНТИ-ФЛИНГ СИСТЕМА
--- ========================================================
 RunService.Stepped:Connect(function()
 	if AntiFlingEnabled and LocalPlayer.Character then
-		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
-			if part:IsA("BasePart") then part.CanCollide = true end
-		end
+		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = true end end
 		for _, player in ipairs(Players:GetPlayers()) do
 			if player ~= LocalPlayer and player.Character then
-				for _, part in ipairs(player.Character:GetChildren()) do
-					if part:IsA("BasePart") then part.CanCollide = false end
-				end
+				for _, part in ipairs(player.Character:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = false end end
 			end
 		end
 	end
 end)
 
--- ========================================================
--- СИСТЕМА ESP И АИМБОТ
--- ========================================================
 local function teleportToGun()
 	local char = LocalPlayer.Character
 	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
-	local droppedGun = Workspace:FindFirstChild("GunDrop")
+	local droppedGun = findDroppedGun()
 	if myHrp and droppedGun and droppedGun:IsA("BasePart") then myHrp.CFrame = droppedGun.CFrame * CFrame.new(0, 2, 0) end
 end
 
@@ -196,74 +186,88 @@ end
 
 task.spawn(function()
 	while task.wait(1) do
-		for _, player in ipairs(Players:GetPlayers()) do 
-			updatePlayerESP(player) 
-		end
-		local droppedGun = Workspace:FindFirstChild("GunDrop")
+		for _, player in ipairs(Players:GetPlayers()) do updatePlayerESP(player) end
+		local droppedGun = findDroppedGun()
 		if droppedGun and droppedGun:IsA("BasePart") then
 			local gunHl = droppedGun:FindFirstChild("GunHighlight")
-			if EspEnabled then
-				if not gunHl then
-					gunHl = Instance.new("Highlight")
-					gunHl.Name = "GunHighlight"
-					gunHl.OutlineColor = Color3.fromRGB(255, 215, 0)
-					gunHl.Parent = droppedGun
-				end
+			if EspEnabled and not gunHl then
+				gunHl = Instance.new("Highlight")
+				gunHl.Name = "GunHighlight"
+				gunHl.OutlineColor = Color3.fromRGB(255, 215, 0)
+				gunHl.Parent = droppedGun
 			end
 		end
 	end
 end)
 
 -- ========================================================
--- НЕУБИВАЕМЫЕ СИСТЕМНЫЕ КНОПКИ CORE GUI
+-- ГЛЯНЦЕВОЕ ОКНО С ХОЛМАМИ WINDOWS XP (BLISS) На ФОНЕ
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
-local function createSystemButton(text, pos, color, callback)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 145, 0, 32)
+local MainPanel = Instance.new("Frame")
+MainPanel.Name = "MainPanel"
+MainPanel.Size = UDim2.new(0, 170, 0, 265)
+MainPanel.Position = UDim2.new(0.02, 0, 0.15, 0)
+MainPanel.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
+MainPanel.BorderSizePixel = 2
+MainPanel.Active = true
+MainPanel.Draggable = true
+MainFrame = MainPanel
+MainPanel.ClipsDescendants = true
+MainPanel.ZIndex = 1
+MainPanel.Parent = ScreenGui
+Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 12)
+
+-- 🌄 НАЛОЖЕНИЕ ХОЛМОВ WINDOWS XP Bliss
+local BlissBackground = Instance.new("ImageLabel", MainPanel)
+BlissBackground.Name = "BlissBg"
+BlissBackground.Size = UDim2.new(1, 0, 1, 0)
+BlissBackground.Image = "rbxassetid://132148783" -- Официальный рабочий ID текстуры Bliss (XP Hills) в Roblox
+BlissBackground.ImageTransparency = 0.45 -- Идеальный баланс, чтобы кнопки были сочными
+BlissBackground.ScaleType = Enum.ScaleType.Crop
+BlissBackground.ZIndex = 2 -- Под кнопками
+
+-- Заголовок
+local Label = Instance.new("TextLabel", MainPanel)
+Label.Text = "AERO HUB BLISS"
+Label.Size = UDim2.new(1, 0, 0, 25)
+Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+Label.Font = Enum.Font.GothamBold Label.TextSize = 11 Label.BackgroundTransparency = 1
+Label.ZIndex = 4
+
+local CloseBtn = Instance.new("TextButton", MainPanel)
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Position = UDim2.new(0.83, 0, 0.02, 0)
+CloseBtn.Text = "X" CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.Font = Enum.Font.GothamBold CloseBtn.TextSize = 11
+CloseBtn.ZIndex = 10
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+local DeltaIcon = Instance.new("ImageButton", ScreenGui)
+DeltaIcon.Name = "AeroHumanIcon"
+DeltaIcon.Image = "rbxassetid://9824248563" 
+DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
+DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 25)
+DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
+DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
+DeltaIcon.ZIndex = 10
+DeltaIcon.Visible = false
+Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
+
+local function createSubButton(text, pos, color, callback)
+	local btn = Instance.new("TextButton", MainPanel)
+	btn.Size = UDim2.new(0, 146, 0, 28)
 	btn.Position = pos
 	btn.BackgroundColor3 = color
 	btn.Text = text
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 11
-	btn.ZIndex = 10
-	btn.Parent = ScreenGui
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-	btn.MouseButton1Click:Connect(callback)
-	return btn
-end
-
-local EspBtn = createSystemButton("ESP: ВКЛ", UDim2.new(0.02, 0, 0.15, 0), Color3.fromRGB(0, 150, 255), function()
-	EspEnabled = not EspEnabled
-	_G.EspBtn.Text = EspEnabled and "ESP: ВКЛ" or "ESP: ВЫКЛ"
-	_G.EspBtn.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
-end) _G.EspBtn = EspBtn
-
-local AimBtn = createSystemButton("АИМБОТ: ВКЛ", UDim2.new(0.02, 0, 0.22, 0), Color3.fromRGB(0, 150, 255), function()
-	AimbotEnabled = not AimbotEnabled
-	_G.AimBtn.Text = AimbotEnabled and "АИМБОТ: ВКЛ" or "АИМБОТ: ВЫКЛ"
-	_G.AimBtn.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
-end) _G.AimBtn = AimBtn
-
-local AntiFlingBtn = createSystemButton("🛡️ АНТИ-ФЛИНГ: ВКЛ", UDim2.new(0.02, 0, 0.29, 0), Color3.fromRGB(0, 150, 255), function()
-	AntiFlingEnabled = not AntiFlingEnabled
-	_G.AntiFlingBtn.Text = AntiFlingEnabled and "🛡️ АНТИ-ФЛИНГ: ВКЛ" or "🛡️ АНТИ-ФЛИНГ: ВЫКЛ"
-	_G.AntiFlingBtn.BackgroundColor3 = AntiFlingEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
-end) _G.AntiFlingBtn = AntiFlingBtn
-
-createSystemButton("💥 ФЛИНГ МАНЬЯКА", UDim2.new(0.02, 0, 0.36, 0), Color3.fromRGB(255, 50, 50), function()
-	flingRole("Murderer")
-end)
-
-createSystemButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.02, 0, 0.43, 0), Color3.fromRGB(255, 120, 50), function()
-	flingRole("Sheriff")
-end)
-
-createSystemButton("⭐ ТП К ПЕСТИКУ", UDim2.new(0.02, 0, 0.50, 0), Color3.fromRGB(255, 200, 0), function()
-	teleportToGun()
-end)
+	btn.Font = Enum.Font.GothamBold btn.TextSize = 10
+	btn.ZIndex = 5 -- Поверх картинок
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	
