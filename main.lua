@@ -187,6 +187,7 @@ MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.3, 0, 0.25, 0)
 MainPanel.Size = UDim2.new(0, 420, 0, 180) 
+MainPanel. Parent = ScreenGui -- ВСТАВЬ ЭТУ СТРОКУ!
 MainPanel.Position = UDim2. new( 0.3, 0, 0.25, 0)
 MainPanel. Size = UDim2. new( 0, 420, 0, 180)
 MainPanel. ZIndex = 1
