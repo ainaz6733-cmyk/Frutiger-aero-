@@ -1,14 +1,15 @@
--- FRUTIGER AERO MM2 HUB V34 (TITAN CORE GUI SYNCHRONIZED)
+-- FRUTIGER AERO MM2 HUB V35 (PLAYER GUI FIX • GURANTEED LAUNCH)
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Полная и безопасная зачистка старой памяти
-if CoreGui:FindFirstChild("DeltaMM2Hub") then 
-	CoreGui.DeltaMM2Hub:Destroy() 
+if PlayerGui:FindFirstChild("DeltaMM2Hub") then 
+	PlayerGui.DeltaMM2Hub:Destroy() 
 end
 
 local EspEnabled = true
@@ -174,13 +175,13 @@ task.spawn(function()
 end)
 
 -- ========================================================
--- МОНОЛИТНЫЙ GUI БЕЗ ОШИБОК ПОТОКА ПРИВЯЗКИ (PARENT FIX)
+-- МОНОЛИТНЫЙ GUI (ПЕРЕНЕСЕН В PLAYER GUI ДЛЯ 100% ВЫВОДА)
 -- ========================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 
--- Создаем рамку меню
+-- Главная панель меню
 local MainPanel = Instance.new("Frame")
 MainPanel.Name = "MainPanel"
 MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
@@ -207,7 +208,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0.05, 0)
 Title.Size = UDim2.new(0, 250, 0, 25)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "FRUTIGER AERO HUB V34"
+Title.Text = "FRUTIGER AERO HUB V35"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -265,7 +266,6 @@ DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
 DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
 DeltaIcon.ZIndex = 12
 DeltaIcon.Visible = false
-Instance.new("UICorner", DeltaIcon).CornerRadius = UDim.new(1, 0)
 
 -- ЛОГИКА НАЖАТИЙ КНОПОК
 EspToggle.MouseButton1Click:Connect(function()
