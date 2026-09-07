@@ -256,17 +256,6 @@ local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2
 TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
 TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
 
--- Синий глянцевый человечек для открытия
-local DeltaIcon = Instance.new("ImageButton")
-DeltaIcon.Name = "AeroHumanIcon"
-DeltaIcon.Image = "rbxassetid://9824248563" 
-DeltaIcon.ImageColor3 = Color3.fromRGB(0, 180, 255)
-DeltaIcon.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
-DeltaIcon.Position = UDim2.new(0.02, 0, 0.45, 0)
-DeltaIcon.Size = UDim2.new(0, 50, 0, 50)
-DeltaIcon.ZIndex = 12
-DeltaIcon.Visible = false
-
 -- ЛОГИКА НАЖАТИЙ КНОПОК
 EspToggle.MouseButton1Click:Connect(function()
 	EspEnabled = not EspEnabled
