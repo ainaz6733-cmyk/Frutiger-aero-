@@ -180,23 +180,28 @@ ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 
 -- Главная панель меню
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaMM2Hub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Enabled = true
+ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
 local MainPanel = Instance.new("Frame")
 MainPanel.Name = "MainPanel"
 MainPanel.BackgroundColor3 = Color3.fromRGB(15, 22, 30)
+MainPanel.BackgroundTransparency = 0
 MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.3, 0, 0.25, 0)
-MainPanel.Size = UDim2.new(0, 420, 0, 180) 
-MainPanel. Parent = ScreenGui -- ВСТАВЬ ЭТУ СТРОКУ!
-MainPanel.Position = UDim2. new( 0.3, 0, 0.25, 0)
-MainPanel. Size = UDim2. new( 0, 420, 0, 180)
-MainPanel. ZIndex = 1
-
-MainPanel.ZIndex = 1
+MainPanel.Size = UDim2.new(0, 420, 0, 180)
+MainPanel.ZIndex = 5
+MainPanel.Visible = true
+MainPanel.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainPanel
+
 
 local TopLine = Instance.new("Frame")
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
