@@ -70,21 +70,19 @@ local function flingRole(roleName)
 		end
 	end
 end
-
 RunService.Stepped:Connect(function()
-	if AntiFlingEnabled and LocalPlayer.Character then
-		for _, part in ipairs(LocalPlayer.Character:GetChildren()) do 
-			if part:IsA("BasePart") then part.CanCollide = true end 
-		end
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer and player.Character then
-				for _, part in ipairs(player.Character:GetChildren()) do 
-					if part:IsA("BasePart") then part.CanCollide = false end 
-				end
-			end
-		end
-	end
+    if AntiFlingEnabled and LocalPlayer.Character then
+        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if myRoot then myRoot.CanCollide = true end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local tRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if tRoot then tRoot.CanCollide = false end
+            end
+        end
+    end
 end)
+
 
 local function teleportToGun()
 	local char = LocalPlayer.Character
@@ -189,8 +187,10 @@ MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.3, 0, 0.25, 0)
 MainPanel.Size = UDim2.new(0, 420, 0, 180) 
-MainPanel.Active = false
-MainPanel.Draggable = false
+MainPanel.Position = UDim2. new( 0.3, 0, 0.25, 0)
+MainPanel. Size = UDim2. new( 0, 420, 0, 180)
+MainPanel. ZIndex = 1
+
 MainPanel.ZIndex = 1
 
 local MainCorner = Instance.new("UICorner")
@@ -261,5 +261,33 @@ EspToggle.MouseButton1Click:Connect(function()
 	EspEnabled = not EspEnabled
 	EspToggle.Text = EspEnabled and "ESP ПОДСВЕТКА: ВКЛ" or "ESP ПОДСВЕТКА: ВЫКЛ"
 	EspToggle.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
+end)
+
+-- НОВЫЙ СКРИПТ ПЕРЕМЕЩЕНИЯ GUI ДЛЯ МОБИЛЬНЫХ ЭМУЛЯТОРОВ
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+MainPanel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainPanel.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+MainPanel.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainPanel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
 end)
 
