@@ -194,7 +194,7 @@ MainPanel.BorderColor3 = Color3.fromRGB(0, 200, 255)
 MainPanel.BorderSizePixel = 2
 MainPanel.Position = UDim2.new(0.3, 0, 0.25, 0)
 MainPanel.Size = UDim2.new(0, 420, 0, 180)
-MainPanel.ZIndex = 1
+MainPanel.ZIndex = 10
 MainPanel.Visible = true
 MainPanel.Parent = ScreenGui
 
@@ -206,7 +206,7 @@ MainCorner.Parent = MainPanel
 local TopLine = Instance.new("Frame")
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 TopLine.Size = UDim2.new(1, 0, 0, 4)
-TopLine.ZIndex = 2
+TopLine.ZIndex = 10
 TopLine.Parent = MainPanel
 
 local Title = Instance.new("TextLabel")
@@ -218,7 +218,7 @@ Title.Text = "FRUTIGER AERO HUB V35"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = 3
+Title.ZIndex = 10
 Title.Parent = MainPanel
 
 -- Крестик X
