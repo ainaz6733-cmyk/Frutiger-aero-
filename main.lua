@@ -70,6 +70,7 @@ local function flingRole(roleName)
 		end
 	end
 end
+
 RunService.Stepped:Connect(function()
     if AntiFlingEnabled and LocalPlayer.Character then
         local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -82,7 +83,6 @@ RunService.Stepped:Connect(function()
         end
     end
 end)
-
 
 local function teleportToGun()
 	local char = LocalPlayer.Character
@@ -120,7 +120,10 @@ local function getBestTarget()
 				local targetRole = getPlayerRole(player)
 				if localRole == "Sheriff" and targetRole == "Murderer" then return player
 				elseif localRole == "Murderer" and targetRole == "Sheriff" then return player
-				elseif targetRole == "Murderer" and distance < shortestDistance then shortestDistance = distance closestPlayer = player end
+				elseif targetRole == "Murderer" and distance < shortestDistance then
+					shortestDistance = distance
+					closestPlayer = player
+				end
 			end
 		end
 	end
@@ -178,11 +181,6 @@ end)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
-
--- Главная панель меню
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DeltaMM2Hub"
-ScreenGui.ResetOnSpawn = false
 ScreenGui.Enabled = true
 ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
@@ -201,7 +199,6 @@ MainPanel.Parent = ScreenGui
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainPanel
-
 
 local TopLine = Instance.new("Frame")
 TopLine.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
@@ -269,6 +266,34 @@ EspToggle.MouseButton1Click:Connect(function()
 	EspToggle.BackgroundColor3 = EspEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
 end)
 
+AimToggle.MouseButton1Click:Connect(function()
+	AimbotEnabled = not AimbotEnabled
+	AimToggle.Text = AimbotEnabled and "ХАРД АИМБОТ: ВКЛ" or "ХАРД АИМБОТ: ВЫКЛ"
+	AimToggle.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
+end)
+
+AntiFlingToggle.MouseButton1Click:Connect(function()
+	AntiFlingEnabled = not AntiFlingEnabled
+	AntiFlingToggle.Text = AntiFlingEnabled and "🛡️ АНТИ-ФЛИНГ: ВКЛ" or "🛡️ АНТИ-ФЛИНГ: ВЫКЛ"
+	AntiFlingToggle.BackgroundColor3 = AntiFlingEnabled and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(80, 90, 100)
+end)
+
+FlingMurderBtn.MouseButton1Click:Connect(function()
+	flingRole("Murderer")
+end)
+
+FlingSheriffBtn.MouseButton1Click:Connect(function()
+	flingRole("Sheriff")
+end)
+
+TpGunBtn.MouseButton1Click:Connect(function()
+	teleportToGun()
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
 -- НОВЫЙ СКРИПТ ПЕРЕМЕЩЕНИЯ GUI ДЛЯ МОБИЛЬНЫХ ЭМУЛЯТОРОВ
 local UserInputService = game:GetService("UserInputService")
 local dragging, dragInput, dragStart, startPos
@@ -296,4 +321,3 @@ UserInputService.InputChanged:Connect(function(input)
         MainPanel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
-
