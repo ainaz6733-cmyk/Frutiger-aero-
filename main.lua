@@ -30,31 +30,46 @@ local function findDroppedGun()
 	end
 	return nil
 end
-
 local function flingTarget(targetPlayer)
-	local char = LocalPlayer.Character
-	local myHrp = char and char:FindFirstChild("HumanoidRootPart")
-	local tHrp = targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if myHrp and tHrp then
-		local oldCFrame = myHrp.CFrame
-		local oldAntiFling = AntiFlingEnabled
-		AntiFlingEnabled = false
-		
-		local bV = Instance.new("BodyAngularVelocity")
-		bV.MaxTorque = Vector3.new(1, 1, 1) * math.huge 
-		bV.AngularVelocity = Vector3.new(0, 99999, 0) 
-		bV.Parent = myHrp
-		
-		for i = 1, 12 do 
-			if tHrp and myHrp then myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.1) end 
-			RunService.Heartbeat:Wait() 
-		end
-		
-		bV:Destroy() 
-		task.wait(0.05) 
-		myHrp.CFrame = oldCFrame 
-		AntiFlingEnabled = oldAntiFling
-	end
+    local char = LocalPlayer.Character
+    local myHrp = char and char:FindFirstChild("HumanoidRootPart")
+    local tHrp = targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if myHrp and tHrp then
+        -- 1. Сохраняем точку, где стоим сейчас (до флинга)
+        local startCFrame = myHrp.CFrame
+        
+        -- 2. Отключаем анти-флинг на время флинга
+        local oldAntiFling = AntiFlingEnabled
+        AntiFlingEnabled = false
+        
+        -- 3. Создаём вращение, но не слишком сильное, чтобы не улетать в космос
+        local bV = Instance.new("BodyAngularVelocity")
+        bV.MaxTorque = Vector3.new(1, 1, 1) * 100000
+        bV.AngularVelocity = Vector3.new(0, 20, 0)   -- меньше скорость -> меньше подброс
+        bV.Parent = myHrp
+        
+        -- 4. Телепортируемся к цели несколько раз (это и есть "флинг")
+        for i = 1, 8 do
+            if tHrp and myHrp then
+                myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1)
+            end
+            RunService.Heartbeat:Wait()
+        end
+        
+        -- 5. Убираем вращение
+        bV:Destroy()
+        task.wait(0.1)  -- ждём, пока физика успокоится
+        
+        -- 6. ВОЗВРАЩАЕМСЯ НА ИСХОДНУЮ ТОЧКУ (ту, где стоял)
+        myHrp.CFrame = startCFrame
+        
+        -- 7. Обнуляем скорость, чтобы не улететь дальше
+        myHrp.AssemblyLinearVelocity = Vector3.zero
+        myHrp.AssemblyAngularVelocity = Vector3.zero
+        
+        -- 8. Включаем анти-флинг обратно
+        AntiFlingEnabled = oldAntiFling
+    end
 end
 
 local function flingRole(roleName)
