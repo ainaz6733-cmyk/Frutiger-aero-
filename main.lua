@@ -183,6 +183,28 @@ ScreenGui.Name = "DeltaMM2Hub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Enabled = true
 ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+-- Кнопка для возврата меню
+local ToggleGui = Instance.new("ScreenGui")
+ToggleGui.Name = "ToggleMenuGui"
+ToggleGui.ResetOnSpawn = false
+ToggleGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0.01, 0, 0.5, 0) -- слева по центру (можно поменять)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+ToggleButton.BackgroundTransparency = 0.2
+ToggleButton.Text = "☰"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 24
+ToggleButton.ZIndex = 100
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+ToggleButton.Parent = ToggleGui
+
+ToggleButton.MouseButton1Click:Connect(function()
+    ScreenGui.Enabled = not ScreenGui.Enabled
+end)
 
 local MainPanel = Instance.new("Frame")
 MainPanel.Name = "MainPanel"
@@ -291,7 +313,7 @@ TpGunBtn.MouseButton1Click:Connect(function()
 end)
 
 CloseBtn.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
+	ScreenGui.Enabled= false 
 end)
 
 -- НОВЫЙ СКРИПТ ПЕРЕМЕЩЕНИЯ GUI ДЛЯ МОБИЛЬНЫХ ЭМУЛЯТОРОВ
