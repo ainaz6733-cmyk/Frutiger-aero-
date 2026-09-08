@@ -322,8 +322,6 @@ end
 -- Сборка кнопок строго по сетке
 local EspToggle = createSubButton("ESP ПОДСВЕТКА: ВКЛ", UDim2.new(0.04, 0, 0.28, 0), Color3.fromRGB(0, 150, 255))
 local AimToggle = createSubButton("ХАРД АИМБОТ: ВКЛ", UDim2.new(0.04, 0, 0.55, 0), Color3.fromRGB(0, 150, 255))
-local AutoFlingBtn = createSubButton("🛡️ АВТО-ФЛИНГ: ВЫКЛ", UDim2.new(0.52, 0, 0.90, 0), Color3.fromRGB(150, 0, 255))
-AntiFlingToggle.Size = UDim2.new(0, 180, 0, 28)
 
 local FlingMurderBtn = createSubButton("💥 ФЛИНГ УБИЙЦЫ", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
 local FlingSheriffBtn = createSubButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.52, 0, 0.55, 0), Color3.fromRGB(255, 120, 50))
