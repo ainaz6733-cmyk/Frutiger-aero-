@@ -328,9 +328,7 @@ AntiFlingToggle.Size = UDim2.new(0, 180, 0, 28)
 local FlingMurderBtn = createSubButton("💥 ФЛИНГ УБИЙЦЫ", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
 local FlingSheriffBtn = createSubButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.52, 0, 0.55, 0), Color3.fromRGB(255, 120, 50))
 local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2.new(0.52, 0, 0.82, 0), Color3.fromRGB(255, 200, 0))
-local AutoFlingBtn = createSubButton("🛡️ АВТО-ФЛИНГ: ВЫКЛ", UDim2.new(0.52, 0, 0.82, 0), Color3.fromRGB(150, 0, 255))
-AutoFlingBtn.Size = UDim2.new(0, 180, 0, 28)
-AutoFlingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
 TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
 TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
 
@@ -364,11 +362,7 @@ end)
 TpGunBtn.MouseButton1Click:Connect(function()
 	teleportToGun()
 end)
-AutoFlingBtn.MouseButton1Click:Connect(function()
-    AutoFlingEnabled = not AutoFlingEnabled
-    AutoFlingBtn.Text = AutoFlingEnabled and "🛡️ АВТО-ФЛИНГ: ВКЛ" or "🛡️ АВТО-ФЛИНГ: ВЫКЛ"
-    AutoFlingBtn.BackgroundColor3 = AutoFlingEnabled and Color3.fromRGB(150, 0, 255) or Color3.fromRGB(80, 90, 100)
-end)
+
 
 CloseBtn.MouseButton1Click:Connect(function()
 	ScreenGui.Enabled= false 
