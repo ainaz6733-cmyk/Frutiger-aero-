@@ -241,7 +241,7 @@ local function createSubButton(text, pos, color)
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 11
-	btn.ZIndex = 5
+	btn.ZIndex = 11
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 	btn.Parent = MainPanel
 	return btn
