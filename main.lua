@@ -31,46 +31,50 @@ local function findDroppedGun()
 	end
 	return nil
 end
-local function flingTarget(targetPlayer)
-    local char = LocalPlayer.Character
-    local myHrp = char and char:FindFirstChild("HumanoidRootPart")
-    local tHrp = targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if myHrp and tHrp then
-        -- 1. Сохраняем точку, где стоим сейчас (до флинга)
-        local startCFrame = myHrp.CFrame
-        
-        -- 2. Отключаем анти-флинг на время флинга
-        local oldAntiFling = AntiFlingEnabled
-        AntiFlingEnabled = false
-        
-        -- 3. Создаём вращение, но не слишком сильное, чтобы не улетать в космос
-        local bV = Instance.new("BodyAngularVelocity")
-        bV.MaxTorque = Vector3.new(1, 1, 1) * 100000
-        bV.AngularVelocity = Vector3.new(0, 20, 0)   -- меньше скорость -> меньше подброс
-        bV.Parent = myHrp
-        
-        -- 4. Телепортируемся к цели несколько раз (это и есть "флинг")
-        for i = 1, 8 do
-            if tHrp and myHrp then
-                myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1)
-            end
-            RunService.Heartbeat:Wait()
-        end
-        
-        -- 5. Убираем вращение
-        bV:Destroy()
-        task.wait(0.1)  -- ждём, пока физика успокоится
-        
-        -- 6. ВОЗВРАЩАЕМСЯ НА ИСХОДНУЮ ТОЧКУ (ту, где стоял)
-        myHrp.CFrame = startCFrame
-        
-        -- 7. Обнуляем скорость, чтобы не улететь дальше
-        myHrp.AssemblyLinearVelocity = Vector3.zero
-        myHrp.AssemblyAngularVelocity = Vector3.zero
-        
-        -- 8. Включаем анти-флинг обратно
-        AntiFlingEnabled = oldAntiFling
-    end
+
+   local function flingTarget(targetPlayer)
+       local char = LocalPlayer.Character
+       local myHrp = char and char:FindFirstChild("HumanoidRootPart")
+       local targetChar = targetPlayer and targetPlayer.Character
+       local tHrp = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+       
+       if myHrp and tHrp then
+           -- Сохраняем свою позицию до флинга
+           local startCFrame = myHrp.CFrame
+           
+           -- Отключаем анти-флинг, чтобы можно было телепортироваться
+           local oldAntiFling = AntiFlingEnabled
+           AntiFlingEnabled = false
+           
+           -- Быстро телепортируемся к цели (чуть позади)
+           myHrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 3)
+           
+           -- Применяем силу к цели: подбрасываем и закручиваем
+           local bodyVelocity = Instance.new("BodyVelocity")
+           bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * math.huge
+           bodyVelocity.Velocity = Vector3.new(0, 500, 0)  -- сила вверх
+           bodyVelocity.Parent = tHrp
+           
+           local bodyAngular = Instance.new("BodyAngularVelocity")
+           bodyAngular.MaxTorque = Vector3.new(1, 1, 1) * math.huge
+           bodyAngular.AngularVelocity = Vector3.new(0, 30, 0)
+           bodyAngular.Parent = tHrp
+           
+           -- Ждём, чтобы цель отлетела
+           task.wait(0.2)
+           
+           -- Убираем силы
+           bodyVelocity:Destroy()
+           bodyAngular:Destroy()
+           
+           -- Возвращаемся на исходную точку
+           myHrp.CFrame = startCFrame
+           myHrp.AssemblyLinearVelocity = Vector3.zero
+           myHrp.AssemblyAngularVelocity = Vector3.zero
+           
+           -- Включаем анти-флинг обратно
+           AntiFlingEnabled = oldAntiFling
+       end
 end
 local function autoFlingNearby()
     if not AutoFlingEnabled then return end
