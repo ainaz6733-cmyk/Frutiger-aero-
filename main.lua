@@ -15,6 +15,7 @@ end
 local EspEnabled = true
 local AimbotEnabled = true
 local AntiFlingEnabled = true
+local AutoFlingEnabled = false  -- авто-флинг выключен по умолчанию, включишь кнопкой
 
 -- ========================================================
 -- ФУНКЦИОНАЛ ЧИТА
@@ -69,6 +70,40 @@ local function flingTarget(targetPlayer)
         
         -- 8. Включаем анти-флинг обратно
         AntiFlingEnabled = oldAntiFling
+    end
+end
+local function autoFlingNearby()
+    if not AutoFlingEnabled then return end
+    local char = LocalPlayer.Character
+    local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if targetRoot then
+                local distance = (myRoot.Position - targetRoot.Position).Magnitude
+                if distance <= 5 then  -- порог срабатывания (5 studs)
+                    -- Отбрасываем цель вверх и в сторону от нас
+                    local dir = (targetRoot.Position - myRoot.Position).Unit
+                    local flingVelocity = Instance.new("BodyVelocity")
+                    flingVelocity.MaxForce = Vector3.new(1, 1, 1) * math.huge
+                    flingVelocity.Velocity = dir * Vector3.new(100, 300, 100) + Vector3.new(0, 500, 0)
+                    flingVelocity.Parent = targetRoot
+
+                    local flingAngular = Instance.new("BodyAngularVelocity")
+                    flingAngular.MaxTorque = Vector3.new(1, 1, 1) * math.huge
+                    flingAngular.AngularVelocity = Vector3.new(0, 30, 0)
+                    flingAngular.Parent = targetRoot
+
+                    -- Удаляем силы через 0.3 секунды, чтобы цель не улетела навсегда
+                    task.delay(0.3, function()
+                        flingVelocity:Destroy()
+                        flingAngular:Destroy()
+                    end)
+                end
+            end
+        end
     end
 end
 
@@ -287,12 +322,15 @@ end
 -- Сборка кнопок строго по сетке
 local EspToggle = createSubButton("ESP ПОДСВЕТКА: ВКЛ", UDim2.new(0.04, 0, 0.28, 0), Color3.fromRGB(0, 150, 255))
 local AimToggle = createSubButton("ХАРД АИМБОТ: ВКЛ", UDim2.new(0.04, 0, 0.55, 0), Color3.fromRGB(0, 150, 255))
-local AntiFlingToggle = createSubButton("🛡️ АНТИ-ФЛИНГ: ВКЛ", UDim2.new(0.04, 0, 0.82, 0), Color3.fromRGB(0, 150, 255))
+local AutoFlingBtn = createSubButton("🛡️ АВТО-ФЛИНГ: ВЫКЛ", UDim2.new(0.52, 0, 0.90, 0), Color3.fromRGB(150, 0, 255))
 AntiFlingToggle.Size = UDim2.new(0, 180, 0, 28)
 
 local FlingMurderBtn = createSubButton("💥 ФЛИНГ УБИЙЦЫ", UDim2.new(0.52, 0, 0.28, 0), Color3.fromRGB(255, 50, 50))
 local FlingSheriffBtn = createSubButton("⚡ ФЛИНГ ШЕРИФА", UDim2.new(0.52, 0, 0.55, 0), Color3.fromRGB(255, 120, 50))
 local TpGunBtn = createSubButton("⭐ ТЕЛЕПОРТ К ПЕСТИКУ", UDim2.new(0.52, 0, 0.82, 0), Color3.fromRGB(255, 200, 0))
+local AutoFlingBtn = createSubButton("🛡️ АВТО-ФЛИНГ: ВЫКЛ", UDim2.new(0.52, 0, 0.82, 0), Color3.fromRGB(150, 0, 255))
+AutoFlingBtn.Size = UDim2.new(0, 180, 0, 28)
+AutoFlingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 TpGunBtn.Size = UDim2.new(0, 180, 0, 28)
 TpGunBtn.TextColor3 = Color3.fromRGB(15, 20, 25)
 
@@ -326,6 +364,11 @@ end)
 TpGunBtn.MouseButton1Click:Connect(function()
 	teleportToGun()
 end)
+AutoFlingBtn.MouseButton1Click:Connect(function()
+    AutoFlingEnabled = not AutoFlingEnabled
+    AutoFlingBtn.Text = AutoFlingEnabled and "🛡️ АВТО-ФЛИНГ: ВКЛ" or "🛡️ АВТО-ФЛИНГ: ВЫКЛ"
+    AutoFlingBtn.BackgroundColor3 = AutoFlingEnabled and Color3.fromRGB(150, 0, 255) or Color3.fromRGB(80, 90, 100)
+end)
 
 CloseBtn.MouseButton1Click:Connect(function()
 	ScreenGui.Enabled= false 
@@ -356,5 +399,10 @@ UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
         MainPanel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+task.spawn(function()
+    while task.wait(0.1) do
+        autoFlingNearby()
     end
 end)
